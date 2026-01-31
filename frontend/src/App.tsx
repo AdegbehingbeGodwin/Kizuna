@@ -30,7 +30,9 @@ import { LandingPage } from "./components/LandingPage";
 import { SettingsPortal } from "./components/SettingsPortal";
 import { getAnalyticsSummary } from "./services/geminiService";
 
-const BACKEND_URL = "http://127.0.0.1:5000/api";
+const BACKEND_URL = import.meta.env.PROD 
+  ? "https://kizuna-wgbv.onrender.com/api" 
+  : "http://127.0.0.1:5000/api";
 
 const App: React.FC = () => {
   const [showLanding, setShowLanding] = useState(true);
