@@ -1,0 +1,8 @@
+{
+  "name": "VetReminder Dashboard",
+  "description": "An automated vaccination and checkup reminder system for veterinary clinics to increase repeat business and improve pet health tracking.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
