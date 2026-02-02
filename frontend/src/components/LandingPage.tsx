@@ -77,7 +77,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   const prefersReducedMotion = useReducedMotion();
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-900 font-sans selection:bg-amber-100 selection:text-amber-900 overflow-x-hidden">
+    <div className="min-h-screen bg-stone-50 text-stone-900 font-sans selection:bg-marine/10 selection:text-ink overflow-x-hidden">
       
       {/* Navigation - Dalmatian Black/White */}
       <motion.nav 
@@ -89,14 +89,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <motion.div 
-              whileHover={{ rotate: 180 }}
+              whileHover={{ rotate: 5 }}
               transition={{ duration: 0.5 }}
-              className="bg-stone-900 p-2.5 rounded-xl shadow-lg"
             >
-              <Sparkles className="text-amber-400" size={22} />
+              <img src="/logo.png" alt="Kizuna Logo" className="w-10 h-10 object-contain" />
             </motion.div>
-            <span className="text-2xl font-black tracking-tight text-stone-900">
-              Kizuna<span className="text-amber-500">.</span>
+            <span className="text-2xl font-black tracking-tight text-ink">
+              Kizuna<span className="text-marine">.</span>
             </span>
           </div>
           
@@ -149,10 +148,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 
       {/* Hero Section */}
       <header className="relative pt-16 pb-24 lg:pt-20 lg:pb-32 overflow-hidden bg-gradient-to-b from-white to-stone-50">
-        {/* Background Elements - Warm amber glows */}
+        {/* Background Elements - Theme glows */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-gradient-to-br from-amber-100/50 to-orange-100/30 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-amber-50 to-yellow-50 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
+          <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-gradient-to-br from-sage/10 to-marine/10 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
+          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-sage/5 to-marine/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
         </div>
         
         <div className="max-w-7xl mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-16 items-center">
@@ -161,13 +160,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             initial="hidden"
             animate="visible"
           >
-            <motion.div variants={prefersReducedMotion ? undefined : fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-stone-900 text-amber-400 text-xs font-bold uppercase tracking-widest mb-6">
+            <motion.div variants={prefersReducedMotion ? undefined : fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-ink text-sage text-xs font-bold uppercase tracking-widest mb-6 border border-sage/20">
               <Zap size={14} fill="currentColor" aria-hidden="true" />
               v2.0 Now Live — AI-First Platform
             </motion.div>
-            <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] text-stone-900 mb-6">
+            <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] text-ink mb-6">
               The AI Operating System for{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-500">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-evergreen to-marine">
                 Modern Vets.
               </span>
             </motion.h1>
@@ -179,7 +178,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
                 onClick={onGetStarted}
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-lg font-bold px-8 py-4 rounded-2xl shadow-xl shadow-amber-200 hover:shadow-2xl hover:shadow-amber-300 transition-all"
+                className="flex items-center justify-center gap-2 bg-gradient-to-r from-evergreen to-marine text-white text-lg font-bold px-8 py-4 rounded-2xl shadow-xl shadow-marine/20 transition-all"
               >
                 Start Free Trial <ArrowRight size={20} />
               </motion.button>
@@ -220,7 +219,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               <motion.img 
                 src="/assets/hero_dashboard.png" 
                 alt="Kizuna Dashboard Interface showing patient management and AI insights"
-                className="w-full rounded-2xl shadow-2xl shadow-stone-400/30 border-2 border-white"
+                className="w-full rounded-2xl shadow-2xl shadow-ink/10 border-2 border-white"
                 animate={prefersReducedMotion ? undefined : { y: [0, -10, 0] }}
                 transition={prefersReducedMotion ? undefined : { duration: 5, repeat: Infinity, ease: "easeInOut" }}
               />
@@ -229,14 +228,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               <motion.div 
                 animate={prefersReducedMotion ? undefined : { y: [0, 8, 0] }}
                 transition={prefersReducedMotion ? undefined : { duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                className="absolute -left-6 top-1/3 bg-white p-4 rounded-xl shadow-lg shadow-stone-200 flex items-center gap-3 border border-stone-100"
+                className="absolute -left-6 top-1/3 bg-white p-4 rounded-xl shadow-lg shadow-ink/5 flex items-center gap-3 border border-ink/5"
               >
-                <div className="bg-gradient-to-br from-amber-400 to-orange-500 p-2 rounded-lg text-white">
+                <div className="bg-gradient-to-br from-evergreen to-marine p-2 rounded-lg text-white">
                   <TrendingUp size={16} aria-hidden="true" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wide">Revenue</p>
-                  <p className="text-sm font-bold text-stone-900">+₦1.2M</p>
+                  <p className="text-[10px] font-bold text-ink/40 uppercase tracking-wide">Revenue</p>
+                  <p className="text-sm font-bold text-ink">+₦1.2M</p>
                 </div>
               </motion.div>
 
@@ -244,13 +243,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               <motion.div 
                 animate={prefersReducedMotion ? undefined : { y: [0, -8, 0] }}
                 transition={prefersReducedMotion ? undefined : { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                className="absolute -right-4 bottom-20 bg-stone-900 p-4 rounded-xl shadow-lg flex items-center gap-3"
+                className="absolute -right-4 bottom-20 bg-ink p-4 rounded-xl shadow-lg flex items-center gap-3"
               >
-                <div className="bg-amber-500 p-2 rounded-lg text-white">
+                <div className="bg-marine p-2 rounded-lg text-white">
                   <Bot size={16} aria-hidden="true" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold text-stone-400 uppercase tracking-wide">AI Agent</p>
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-wide">AI Agent</p>
                   <p className="text-sm font-bold text-white">Active</p>
                 </div>
               </motion.div>
@@ -259,9 +258,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               <motion.div 
                 animate={prefersReducedMotion ? undefined : { y: [0, 6, 0] }}
                 transition={prefersReducedMotion ? undefined : { duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                className="absolute right-8 top-6 bg-stone-900 px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg"
+                className="absolute right-8 top-6 bg-ink px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg"
               >
-                <Star size={12} fill="#fbbf24" className="text-amber-400" aria-hidden="true" />
+                <Star size={12} fill="#fbbf24" className="text-marine" aria-hidden="true" />
                 <span className="text-xs font-bold text-white">4.9</span>
               </motion.div>
             </div>
@@ -290,9 +289,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             viewport={{ once: true }}
             className="text-center mb-16"
           >
-            <p className="text-amber-600 font-bold text-sm uppercase tracking-widest mb-3">Simple Setup</p>
-            <h2 className="text-3xl lg:text-4xl font-black text-stone-900 mb-4">Up and running in 3 steps</h2>
-            <p className="text-stone-500 text-lg max-w-2xl mx-auto">No complex integrations. No IT team required. Just sign up and start sending.</p>
+            <p className="text-marine font-bold text-sm uppercase tracking-widest mb-3">Simple Setup</p>
+            <h2 className="text-3xl lg:text-4xl font-black text-ink mb-4">Up and running in 3 steps</h2>
+            <p className="text-ink/60 text-lg max-w-2xl mx-auto">No complex integrations. No IT team required. Just sign up and start sending.</p>
           </motion.div>
 
           <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
@@ -310,10 +309,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 className="relative text-center group"
               >
                 <div className="relative inline-block mb-6">
-                  <div className="bg-stone-900 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto text-amber-400 shadow-lg group-hover:scale-105 transition-transform">
+                  <div className="bg-ink w-16 h-16 rounded-2xl flex items-center justify-center mx-auto text-sage shadow-lg group-hover:scale-105 transition-transform">
                     <item.icon size={28} aria-hidden="true" />
                   </div>
-                  <div className="absolute -top-2 -right-2 bg-gradient-to-br from-amber-400 to-orange-500 w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white shadow-sm">
+                  <div className="absolute -top-2 -right-2 bg-gradient-to-br from-evergreen to-marine w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white shadow-sm">
                     {item.step}
                   </div>
                 </div>
@@ -340,9 +339,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <p className="text-amber-600 font-bold text-sm uppercase tracking-widest mb-3">Powerful Features</p>
-            <h2 className="text-3xl lg:text-4xl font-black text-stone-900 mb-4">Everything you need. Nothing you don't.</h2>
-            <p className="text-stone-500 text-lg max-w-xl mx-auto">Built by vets, powered by AI. Kizuna handles the busywork so you can focus on the medicine.</p>
+            <p className="text-marine font-bold text-sm uppercase tracking-widest mb-3">Powerful Features</p>
+            <h2 className="text-3xl lg:text-4xl font-black text-ink mb-4">Everything you need. Nothing you don't.</h2>
+            <p className="text-ink/60 text-lg max-w-xl mx-auto">Built by vets, powered by AI. Kizuna handles the busywork so you can focus on the medicine.</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -352,15 +351,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-stone-200 hover:shadow-lg hover:border-amber-200 transition-all group"
+              className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-ink/5 hover:shadow-lg hover:border-marine/20 transition-all group"
             >
               <div className="flex items-start gap-4">
-                <div className="bg-stone-900 w-12 h-12 rounded-xl flex items-center justify-center text-amber-400 flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg">
+                <div className="bg-ink w-12 h-12 rounded-xl flex items-center justify-center text-sage flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg">
                   <Bot size={22} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold mb-2 text-stone-900">AI-Powered Reminders</h3>
-                  <p className="text-stone-500 text-sm leading-relaxed">
+                  <h3 className="text-xl font-bold mb-2 text-ink">AI-Powered Reminders</h3>
+                  <p className="text-ink/60 text-sm leading-relaxed">
                     Forget generic templates. Our AI-powered engine crafts personalized, empathetic WhatsApp messages for vaccinations and checkups that owners actually read.
                   </p>
                 </div>
@@ -383,15 +382,15 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
-              className="bg-white p-8 rounded-2xl shadow-sm border border-stone-200 hover:shadow-lg hover:border-amber-200 transition-all group"
+              className="bg-white p-8 rounded-2xl shadow-sm border border-ink/5 hover:shadow-lg hover:border-marine/20 transition-all group"
             >
               <div className="flex items-start gap-4 mb-6">
-                <div className="bg-gradient-to-br from-amber-400 to-orange-500 w-12 h-12 rounded-xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-amber-200">
+                <div className="bg-gradient-to-br from-evergreen to-marine w-12 h-12 rounded-xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-marine/10">
                   <TrendingUp size={22} />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold mb-1 text-stone-900">Revenue Tracking</h3>
-                  <p className="text-stone-500 text-sm">Real-time conversions</p>
+                  <h3 className="text-xl font-bold mb-1 text-ink">Revenue Tracking</h3>
+                  <p className="text-ink/40 text-sm">Real-time conversions</p>
                 </div>
               </div>
               <div className="flex items-end gap-1 h-20">
@@ -401,7 +400,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                     initial={{ height: 0 }}
                     whileInView={{ height: `${h}%` }}
                     transition={{ duration: 0.5, delay: i * 0.1 }}
-                    className="flex-1 bg-gradient-to-t from-amber-500 to-orange-400 rounded-t-md"
+                    className="flex-1 bg-gradient-to-t from-evergreen to-marine rounded-t-md"
                   />
                 ))}
               </div>
@@ -437,12 +436,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               className="lg:col-span-2 bg-stone-900 p-8 rounded-2xl shadow-xl text-white group"
             >
               <div className="flex items-start gap-4">
-                <div className="bg-amber-500 w-12 h-12 rounded-xl flex items-center justify-center text-white flex-shrink-0">
+                <div className="bg-marine w-12 h-12 rounded-xl flex items-center justify-center text-white flex-shrink-0">
                   <Stethoscope size={22} />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Complete Patient History</h3>
-                  <p className="text-stone-400 text-sm leading-relaxed max-w-md">
+                  <p className="text-white/60 text-sm leading-relaxed max-w-md">
                     Access breeds, weights, past visits, and owner details instantly. A beautiful, searchable database for your furry patients.
                   </p>
                 </div>
@@ -502,11 +501,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </section>
 
-      {/* Final CTA Section - Dalmatian Black + Golden Amber */}
-      <section className="py-24 bg-stone-900 relative overflow-hidden">
+      {/* Final CTA Section */}
+      <section className="py-24 bg-ink relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-marine/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-sage/10 rounded-full blur-3xl" />
         </div>
         
         <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
@@ -516,13 +515,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             viewport={{ once: true }}
           >
             <h2 className="text-3xl lg:text-5xl font-black text-white mb-6">Ready to grow your practice?</h2>
-            <p className="text-xl text-stone-400 mb-10 max-w-2xl mx-auto">Join hundreds of clinics already using Kizuna to automate reminders, boost retention, and increase revenue.</p>
+            <p className="text-xl text-white/50 mb-10 max-w-2xl mx-auto">Join hundreds of clinics already using Kizuna to automate reminders, boost retention, and increase revenue.</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button 
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={onGetStarted}
-                className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-lg font-bold px-10 py-4 rounded-2xl hover:shadow-xl hover:shadow-amber-500/20 transition-all"
+                className="bg-gradient-to-r from-evergreen to-marine text-white text-lg font-bold px-10 py-4 rounded-2xl hover:shadow-xl hover:shadow-marine/20 transition-all"
               >
                 Start Free Trial
               </motion.button>
@@ -534,25 +533,23 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 Schedule Demo
               </motion.button>
             </div>
-            <p className="text-stone-500 text-sm mt-8 flex items-center justify-center gap-2">
-              <CheckCircle size={16} className="text-amber-500" /> No credit card required • 14-day free trial
+            <p className="text-white/40 text-sm mt-8 flex items-center justify-center gap-2">
+              <CheckCircle size={16} className="text-marine" /> No credit card required • 14-day free trial
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Footer - Dalmatian Dark */}
-      <footer className="bg-stone-950 py-16 text-white">
+      {/* Footer */}
+      <footer className="bg-[#001217] py-16 text-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="bg-stone-800 p-2 rounded-xl">
-                  <Sparkles className="text-amber-400" size={18} />
-                </div>
+                <img src="/logo.png" alt="Kizuna" className="w-8 h-8 object-contain" />
                 <span className="text-xl font-black">Kizuna</span>
               </div>
-              <p className="text-stone-500 text-sm">The AI-powered operating system for modern veterinary clinics.</p>
+              <p className="text-white/40 text-sm">The AI-powered operating system for modern veterinary clinics.</p>
             </div>
             <div>
               <h4 className="font-bold mb-4 text-sm text-stone-300">Product</h4>

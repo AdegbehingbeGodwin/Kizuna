@@ -241,42 +241,38 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-stone-50 font-sans selection:bg-amber-100 selection:text-amber-800 flex">
+    <div className="min-h-screen bg-mist font-sans selection:bg-marine/10 selection:text-ink flex">
       {/* Mobile Header */}
-      <div className="lg:hidden absolute top-0 w-full bg-white/80 backdrop-blur-md z-40 px-6 py-4 flex items-center justify-between border-b border-stone-200">
+      <div className="lg:hidden absolute top-0 w-full glass-panel z-40 px-6 py-4 flex items-center justify-between border-b border-white/20">
         <div className="flex items-center gap-2">
-          <div className="bg-stone-900 p-1.5 rounded-lg">
-            <Sparkles className="text-amber-400" size={16} />
-          </div>
-          <span className="text-lg font-black tracking-tighter text-stone-900">
-            Kizuna<span className="text-amber-500">.</span>
+          <img src="/logo.png" alt="Kizuna Logo" className="w-8 h-8 object-contain" />
+          <span className="text-lg font-black tracking-tighter text-ink">
+            Kizuna<span className="text-marine">.</span>
           </span>
         </div>
         <button
           type="button"
           aria-label="Notifications"
-          className="relative p-2 text-stone-400 hover:bg-stone-100 rounded-xl transition-colors"
+          className="relative p-2 text-ink/40 hover:bg-ink/5 rounded-xl transition-colors"
         >
           <Bell size={20} aria-hidden="true" />
           <span
-            className="absolute top-2 right-2 w-2 h-2 bg-amber-500 rounded-full border-2 border-white"
+            className="absolute top-2 right-2 w-2 h-2 bg-marine rounded-full border-2 border-white"
             aria-hidden="true"
           ></span>
         </button>
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-72 bg-white border-r border-slate-100 h-screen sticky top-0 flex-col justify-between p-6">
+      <aside className="hidden lg:flex w-72 bg-white border-r border-ink/5 h-screen sticky top-0 flex-col justify-between p-6">
         <div>
           <div
-            className="flex items-center gap-2 px-2 mb-12 cursor-pointer"
+            className="flex items-center gap-3 px-2 mb-12 cursor-pointer"
             onClick={() => setShowLanding(true)}
           >
-            <div className="bg-stone-900 p-2 rounded-xl shadow-lg">
-              <Sparkles className="text-amber-400" size={20} />
-            </div>
-            <span className="text-2xl font-black tracking-tighter text-stone-900">
-              Kizuna<span className="text-amber-500">.</span>
+            <img src="/logo.png" alt="Kizuna Logo" className="w-10 h-10 object-contain" />
+            <span className="text-2xl font-black tracking-tighter text-ink">
+              Kizuna<span className="text-marine">.</span>
             </span>
           </div>
 
@@ -305,8 +301,8 @@ const App: React.FC = () => {
               active={activeTab === "campaigns"}
               onClick={() => setActiveTab("campaigns")}
             />
-            <div className="pt-6 mt-6 border-t border-slate-100">
-              <p className="px-5 text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+            <div className="pt-6 mt-6 border-t border-ink/5">
+              <p className="px-5 text-xs font-bold text-ink/30 uppercase tracking-wider mb-4">
                 Settings
               </p>
               <NavItem
@@ -337,15 +333,15 @@ const App: React.FC = () => {
             </header>
 
             {aiInsight && (
-              <div className="bg-stone-900 p-6 rounded-[2rem] text-white shadow-xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700"></div>
+              <div className="bg-ink p-6 rounded-[2rem] text-white shadow-xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-marine/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700"></div>
                 <div className="relative z-10 flex gap-4">
-                  <div className="bg-amber-500 p-3 rounded-2xl h-fit">
+                  <div className="bg-marine p-3 rounded-2xl h-fit">
                     <Sparkles className="text-white" size={24} />
                   </div>
                   <div className="flex-1">
                     <h3 className="font-bold text-lg mb-1">AI Daily Insight</h3>
-                    <p className="text-stone-300 text-sm leading-relaxed max-w-2xl">
+                    <p className="text-white/60 text-sm leading-relaxed max-w-2xl">
                       {aiInsight}
                     </p>
                   </div>
@@ -357,23 +353,23 @@ const App: React.FC = () => {
               <StatsCard
                 label="Total Patients"
                 value={stats.totalPets.toString()}
-                icon={<Users className="text-slate-400" size={20} />}
+                icon={<Users className="text-ink/30" size={20} />}
               />
               <StatsCard
                 label="Reminders Sent"
                 value={stats.remindersSent.toString()}
-                icon={<Send className="text-slate-400" size={20} />}
+                icon={<Send className="text-ink/30" size={20} />}
               />
               <StatsCard
                 label="Conversion"
                 value={`${stats.conversionRate.toFixed(1)}%`}
-                icon={<BarChart3 className="text-slate-400" size={20} />}
+                icon={<BarChart3 className="text-ink/30" size={20} />}
                 trend="+2.4%"
               />
               <StatsCard
                 label="Est. Revenue"
                 value={`${CURRENCY_SYMBOL}${stats.estimatedRevenue.toLocaleString()}`}
-                icon={<Wallet className="text-slate-400" size={20} />}
+                icon={<Wallet className="text-ink/30" size={20} />}
                 highlight
               />
             </div>
@@ -392,9 +388,9 @@ const App: React.FC = () => {
               {/* Sidebar - Activity + Quick Actions */}
               <div className="space-y-6">
                 {/* Quick Actions */}
-                <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-6 rounded-[2rem] text-white">
+                <div className="bg-gradient-to-br from-evergreen to-marine p-6 rounded-[2rem] text-white">
                   <h3 className="text-lg font-bold mb-2">Quick Actions</h3>
-                  <p className="text-amber-100 text-sm mb-4">Get things done faster</p>
+                  <p className="text-white/60 text-sm mb-4">Get things done faster</p>
                   <div className="space-y-3">
                     <button
                       type="button"
@@ -422,7 +418,7 @@ const App: React.FC = () => {
                     {reminders.slice(0, 5).map((reminder) => (
                       <div key={reminder.id} className="flex gap-3 items-start">
                         <div
-                          className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${reminder.status === "sent" ? "bg-amber-400" : "bg-green-500"}`}
+                          className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${reminder.status === "sent" ? "bg-marine" : "bg-green-500"}`}
                         />
                         <div>
                           <p className="text-sm font-semibold text-slate-700">
@@ -499,7 +495,7 @@ const App: React.FC = () => {
                 />
                 <button
                   onClick={() => document.getElementById("excel-upload")?.click()}
-                  className="bg-white text-slate-900 border border-slate-200 pl-4 pr-6 py-3 rounded-2xl font-bold flex items-center shadow-sm hover:bg-slate-50 transition-all"
+                  className="bg-white text-ink border border-ink/10 pl-4 pr-6 py-3 rounded-2xl font-bold flex items-center shadow-sm hover:bg-mist transition-all"
                 >
                   <FileText className="mr-2" size={20} /> Import Excel
                 </button>
@@ -872,7 +868,7 @@ const MegaphoneIcon = ({ active }: { active: boolean }) => (
     strokeWidth="2"
     strokeLinecap="round"
     strokeLinejoin="round"
-    className={active ? "text-amber-600" : "text-stone-400"}
+    className={active ? "text-marine" : "text-ink/40"}
   >
     <path d="m3 11 18-5v12L3 14v-3z" />
     <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" />
@@ -889,11 +885,11 @@ const NavItem: React.FC<{
     onClick={onClick}
     className={`w-full flex items-center space-x-4 px-5 py-4 rounded-2xl font-bold transition-all ${
       active
-        ? "bg-amber-50 text-amber-700 shadow-sm shadow-amber-100"
-        : "text-stone-500 hover:bg-stone-100 hover:text-stone-900"
+        ? "bg-sage/10 text-evergreen shadow-sm shadow-sage/5"
+        : "text-ink/50 hover:bg-ink/5 hover:text-ink"
     }`}
   >
-    <span className={active ? "text-amber-600" : "text-stone-400"}>{icon}</span>
+    <span className={active ? "text-marine" : "text-ink/30"}>{icon}</span>
     <span>{label}</span>
   </button>
 );
@@ -908,10 +904,10 @@ const MobileNavItem: React.FC<{
     onClick={onClick}
     className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
       highlight
-        ? "bg-stone-900 text-amber-400 shadow-lg -translate-y-4 w-12 h-12 rounded-2xl"
+        ? "bg-ink text-sage shadow-lg -translate-y-4 w-12 h-12 rounded-2xl"
         : active
-          ? "text-amber-600"
-          : "text-stone-400"
+          ? "text-marine"
+          : "text-ink/40"
     }`}
   >
     {icon}

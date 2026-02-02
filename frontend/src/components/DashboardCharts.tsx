@@ -30,8 +30,8 @@ export const DashboardCharts: React.FC = () => {
                 itemStyle={{ fontSize: '12px', fontWeight: 700 }}
                 labelStyle={{ fontWeight: 800, marginBottom: '4px', fontSize: '13px' }}
               />
-              <Bar dataKey="reminders" fill="#4f46e5" radius={[6, 6, 0, 0]} name="Reminders Sent" barSize={12} />
-              <Bar dataKey="conversions" fill="#10b981" radius={[6, 6, 0, 0]} name="Bookings Made" barSize={12} />
+              <Bar dataKey="reminders" fill="#1F73C2" radius={[6, 6, 0, 0]} name="Reminders Sent" barSize={12} />
+              <Bar dataKey="conversions" fill="#719A73" radius={[6, 6, 0, 0]} name="Bookings Made" barSize={12} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -47,8 +47,8 @@ export const DashboardCharts: React.FC = () => {
             <AreaChart data={data.map(d => ({ ...d, revenue: d.conversions * 5000 }))}>
               <defs>
                 <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.15}/>
-                  <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
+                  <stop offset="5%" stopColor="#1F73C2" stopOpacity={0.15}/>
+                  <stop offset="95%" stopColor="#1F73C2" stopOpacity={0}/>
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f8fafc" />
@@ -59,7 +59,7 @@ export const DashboardCharts: React.FC = () => {
                 itemStyle={{ fontSize: '12px', fontWeight: 700 }}
                 labelStyle={{ fontWeight: 800, marginBottom: '4px', fontSize: '13px' }}
               />
-              <Area type="monotone" dataKey="revenue" stroke="#4f46e5" fillOpacity={1} fill="url(#colorRev)" strokeWidth={4} name="Profit (₦)" dot={{ r: 4, fill: '#4f46e5', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6, strokeWidth: 0 }} />
+              <Area type="monotone" dataKey="revenue" stroke="#1F73C2" fillOpacity={1} fill="url(#colorRev)" strokeWidth={4} name="Profit (₦)" dot={{ r: 4, fill: '#1F73C2', strokeWidth: 2, stroke: '#fff' }} activeDot={{ r: 6, strokeWidth: 0 }} />
             </AreaChart>
           </ResponsiveContainer>
         </div>

@@ -27,7 +27,7 @@ export const CampaignCard: React.FC<CampaignCardProps> = ({ title, status, sent,
       </div>
       <div>
         <p className="text-xs font-bold text-slate-400 uppercase">Rev</p>
-        <p className="text-lg font-black text-indigo-600">{conversions > 0 ? `${CURRENCY_SYMBOL}${conversions * 5000}` : '-'}</p>
+        <p className="text-lg font-black text-marine">{conversions > 0 ? `${CURRENCY_SYMBOL}${conversions * 5000}` : '-'}</p>
       </div>
     </div>
   </div>

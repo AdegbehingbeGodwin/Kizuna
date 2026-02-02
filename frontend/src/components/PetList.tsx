@@ -21,7 +21,7 @@ export const PetList: React.FC<PetListProps> = ({ pets, onSendReminder, onDelete
           <button 
             type="button" 
             onClick={onViewAll}
-            className="text-sm font-bold text-amber-600 hover:text-amber-800 transition-colors" 
+            className="text-sm font-bold text-marine hover:text-ink transition-colors" 
             aria-label="View all patient records"
           >
             View All
@@ -47,7 +47,7 @@ export const PetList: React.FC<PetListProps> = ({ pets, onSendReminder, onDelete
                       {pet.name[0]}
                     </div>
                     <div>
-                      <p className="font-bold text-slate-900 leading-tight">{pet.name} <span className="text-[10px] font-black uppercase text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded ml-1">{pet.sex || 'Unknown'}</span></p>
+                      <p className="font-bold text-slate-900 leading-tight">{pet.name} <span className="text-[10px] font-black uppercase text-marine bg-marine/10 px-1.5 py-0.5 rounded ml-1">{pet.sex || 'Unknown'}</span></p>
                       <p className="text-xs font-medium text-slate-500 mt-1">
                         {pet.breed} {pet.color && `• ${pet.color}`} <span className="text-slate-300 mx-1">/</span> {pet.ownerName}
                       </p>
@@ -58,7 +58,7 @@ export const PetList: React.FC<PetListProps> = ({ pets, onSendReminder, onDelete
                   <div className="flex flex-col gap-1">
                     <span className={`inline-flex items-center w-fit px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${
                       pet.status === 'Up-to-date' ? 'bg-emerald-50 text-emerald-600' : 
-                      pet.status === 'Due Soon' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'
+                      pet.status === 'Due Soon' ? 'bg-sage/10 text-evergreen' : 'bg-rose-50 text-rose-600'
                     }`}>
                       {pet.status}
                     </span>
@@ -80,7 +80,7 @@ export const PetList: React.FC<PetListProps> = ({ pets, onSendReminder, onDelete
                     <button 
                       type="button"
                       onClick={() => onSendReminder(pet)}
-                      className="bg-indigo-50 text-indigo-600 p-2.5 rounded-xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                      className="bg-marine/10 text-marine p-2.5 rounded-xl hover:bg-marine hover:text-white transition-all shadow-sm"
                       aria-label={`Send AI reminder to ${pet.ownerName} about ${pet.name}`}
                     >
                       <Send size={16} aria-hidden="true" />

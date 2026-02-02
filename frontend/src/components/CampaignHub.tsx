@@ -65,10 +65,10 @@ const CAMPAIGN_TEMPLATES = [
         name: 'Happy New Month',
         description: 'Monthly greetings to build client relationships',
         icon: PartyPopper,
-        color: 'from-amber-500 to-orange-500',
-        bgColor: 'bg-amber-50',
-        iconColor: 'text-amber-600',
-        defaultMessage: "🎉 Happy New Month, {owner_name}! Wishing you and {pet_name} a wonderful month ahead filled with health and happiness! From all of us at Kizuna Vet Center 🐾💛",
+        color: 'from-evergreen to-marine',
+        bgColor: 'bg-sage/10',
+        iconColor: 'text-marine',
+        defaultMessage: "🎉 Happy New Month, {owner_name}! Wishing you and {pet_name} a wonderful month ahead filled with health and happiness! From all of us at Kizuna Vet Center 🐾💚",
         target: 'All Patients'
     }
 ];
@@ -177,7 +177,7 @@ export const CampaignHub: React.FC = () => {
         return (
             <div className="flex items-center justify-center py-20">
                 <div className="text-center">
-                    <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                    <div className="w-12 h-12 border-4 border-marine border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                     <p className="text-slate-500 font-semibold">Loading Campaign Hub...</p>
                 </div>
             </div>
@@ -226,7 +226,7 @@ export const CampaignHub: React.FC = () => {
                 >
                     Active Campaigns
                     {campaigns.length > 0 && (
-                        <span className="bg-amber-500 text-white text-xs px-2 py-0.5 rounded-full">{campaigns.length}</span>
+                        <span className="bg-marine text-white text-xs px-2 py-0.5 rounded-full">{campaigns.length}</span>
                     )}
                 </button>
             </div>
@@ -237,7 +237,7 @@ export const CampaignHub: React.FC = () => {
                     {/* Campaign Templates Grid */}
                     <div>
                         <h2 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-                            <Zap className="text-amber-500" size={20} />
+                            <Zap className="text-marine" size={20} />
                             Quick Campaign Templates
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -367,14 +367,14 @@ export const CampaignHub: React.FC = () => {
                             {campaigns.map((campaign) => (
                                 <div key={campaign.id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                                     <div className="flex items-center justify-between mb-4">
-                                        <div className="bg-amber-100 p-2.5 rounded-xl">
-                                            <Zap className="text-amber-600" size={20} />
+                                        <div className="bg-sage/10 p-2.5 rounded-xl">
+                                            <Zap className="text-marine" size={20} />
                                         </div>
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
                                             campaign.status === 'sent' 
                                                 ? 'bg-green-100 text-green-600' 
                                                 : campaign.status === 'draft'
-                                                ? 'bg-amber-100 text-amber-600'
+                                                ? 'bg-sage/10 text-evergreen'
                                                 : 'bg-slate-100 text-slate-500'
                                         }`}>
                                             {campaign.status}
@@ -478,7 +478,7 @@ export const CampaignHub: React.FC = () => {
                                 </label>
                                 <select 
                                     id="campaign-target" 
-                                    className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-amber-500 transition-all font-medium" 
+                                    className="w-full px-4 py-3 bg-slate-50 rounded-xl outline-none focus:ring-2 focus:ring-marine transition-all font-medium" 
                                     value={campaignDraft.target} 
                                     onChange={e => setCampaignDraft({...campaignDraft, target: e.target.value})}
                                 >
