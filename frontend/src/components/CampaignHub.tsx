@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Sparkles, Send, Trash2, Calendar, Plus, Zap, Pill, Heart, Shield, Cat, Dog, PartyPopper, Syringe, Clock, Users, CheckCircle2 } from 'lucide-react';
-
-const BACKEND_URL = "http://127.0.0.1:5000/api";
+import { apiFetch } from '../services/api';
 
 // Predefined campaign templates for veterinary clinics
 const CAMPAIGN_TEMPLATES = [
@@ -95,7 +94,7 @@ export const CampaignHub: React.FC = () => {
 
     const fetchDrafts = async () => {
         try {
-            const res = await fetch(`${BACKEND_URL}/agent/drafts`);
+            const res = await apiFetch('/agent/drafts');
             const data = await res.json();
             setDrafts(data);
         } catch (e) {
@@ -105,7 +104,7 @@ export const CampaignHub: React.FC = () => {
 
     const fetchCampaigns = async () => {
         try {
-            const res = await fetch(`${BACKEND_URL}/campaigns`);
+            const res = await apiFetch('/campaigns');
             const data = await res.json();
             setCampaigns(data);
             setLoading(false);
@@ -139,7 +138,7 @@ export const CampaignHub: React.FC = () => {
     const handleCreateCampaign = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const res = await fetch(`${BACKEND_URL}/campaigns`, {
+            const res = await apiFetch('/campaigns', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(campaignDraft)
@@ -157,7 +156,7 @@ export const CampaignHub: React.FC = () => {
 
     const process_draft = async (draftId: string, approved: boolean) => {
         try {
-            await fetch(`${BACKEND_URL}/agent/process-draft`, {
+            await apiFetch('/agent/process-draft', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ draftId, approved, message: draftMessages[draftId] || '' })
@@ -169,7 +168,7 @@ export const CampaignHub: React.FC = () => {
     };
 
     const generateAutoWishes = async () => {
-        await fetch(`${BACKEND_URL}/agent/generate-auto-wishes`, { method: 'POST' });
+        await apiFetch('/agent/generate-auto-wishes', { method: 'POST' });
         fetchDrafts();
     };
 

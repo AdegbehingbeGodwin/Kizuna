@@ -1,586 +1,441 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { motion, useInView, useReducedMotion } from 'framer-motion';
-import { 
-  Sparkles, 
-  Zap, 
-  Bot, 
-  TrendingUp, 
-  MessageSquare, 
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import {
   ArrowRight,
-  Stethoscope,
-  Send,
-  Users,
-  CheckCircle,
+  BellRing,
+  CalendarCheck,
+  Check,
+  ChevronRight,
+  CircleCheck,
+  ClipboardCheck,
+  FileText,
+  HeartPulse,
+  Languages,
   Menu,
+  MessageCircle,
+  Mic,
+  ShieldCheck,
+  Sparkles,
+  Stethoscope,
+  UsersRound,
   X,
-  Quote,
-  Star,
-  Play
-} from 'lucide-react';
+} from "lucide-react";
+import "./LandingPage.css";
 
 interface LandingPageProps {
   onGetStarted: () => void;
 }
 
-// Animation Variants
-const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } }
-};
+const ownerCapabilities = [
+  {
+    icon: MessageCircle,
+    title: "Start with what you know",
+    copy: "Describe the animal and what has changed. Kizuna asks focused follow-up questions instead of expecting clinical language.",
+  },
+  {
+    icon: HeartPulse,
+    title: "Build a useful animal profile",
+    copy: "Species, age, symptoms, history, medications, location, and other relevant details become a structured intake.",
+  },
+  {
+    icon: CalendarCheck,
+    title: "Arrive better prepared",
+    copy: "When professional care is needed, the owner can share a concise case summary instead of beginning again from memory.",
+  },
+];
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.15,
-      delayChildren: 0.2
-    }
-  }
-};
+const clinicCapabilities = [
+  {
+    icon: Mic,
+    title: "AI consultation scribe",
+    copy: "Turn the consultation into a structured SOAP draft while the clinician stays focused on the patient.",
+  },
+  {
+    icon: MessageCircle,
+    title: "Care inbox",
+    copy: "See organized owner intakes, missing information, safety flags, and cases waiting for human review.",
+  },
+  {
+    icon: ClipboardCheck,
+    title: "Referral-ready records",
+    copy: "Carry the intake, consultation note, patient history, care plan, and handover context together.",
+  },
+  {
+    icon: BellRing,
+    title: "Follow-up without loose ends",
+    copy: "Manage vaccinations, medication checks, wellness recalls, discharge follow-up, and the next appointment.",
+  },
+];
 
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" } }
-};
+const careLoop = [
+  {
+    number: "01",
+    title: "The owner tells the story",
+    copy: "A pet owner or farmer starts a chat and describes the animal, the concern, and what has changed.",
+  },
+  {
+    number: "02",
+    title: "Kizuna clerks the case",
+    copy: "The assistant gathers missing details, watches for urgent warning signs, and prepares a structured intake.",
+  },
+  {
+    number: "03",
+    title: "Care transfers with context",
+    copy: "With the owner's consent, a receiving clinic can review the case summary before the consultation begins.",
+  },
+  {
+    number: "04",
+    title: "Follow-up stays connected",
+    copy: "The approved note, owner instructions, reminders, and next appointment continue from the same patient story.",
+  },
+];
 
-// Animated Counter Component
-const AnimatedCounter: React.FC<{ target: number; suffix?: string; duration?: number }> = ({ 
-  target, suffix = "", duration = 2 
-}) => {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-
-  useEffect(() => {
-    if (isInView) {
-      let start = 0;
-      const increment = target / (duration * 60);
-      const timer = setInterval(() => {
-        start += increment;
-        if (start >= target) {
-          setCount(target);
-          clearInterval(timer);
-        } else {
-          setCount(Math.floor(start));
-        }
-      }, 1000 / 60);
-      return () => clearInterval(timer);
-    }
-  }, [isInView, target, duration]);
-
-  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>;
+const reveal = {
+  initial: { opacity: 0, y: 22 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, amount: 0.16 },
+  transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as const },
 };
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMobileMenuOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [mobileMenuOpen]);
+
+  const closeMenu = () => setMobileMenuOpen(false);
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-900 font-sans selection:bg-marine/10 selection:text-ink overflow-x-hidden">
-      
-      {/* Navigation - Dalmatian Black/White */}
-      <motion.nav 
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="sticky top-0 z-50 bg-white/95 backdrop-blur-lg border-b border-stone-200 shadow-sm"
-      >
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <motion.div 
-              whileHover={{ rotate: 5 }}
-              transition={{ duration: 0.5 }}
-            >
-              <img src="/logo.png" alt="Kizuna Logo" className="w-10 h-10 object-contain" />
-            </motion.div>
-            <span className="text-2xl font-black tracking-tight text-ink">
-              Kizuna<span className="text-marine">.</span>
-            </span>
-          </div>
-          
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-8 font-semibold text-sm text-stone-600">
-            <a href="#features" className="hover:text-amber-600 transition-colors">Features</a>
-            <a href="#how-it-works" className="hover:text-amber-600 transition-colors">How It Works</a>
-            <a href="#testimonials" className="hover:text-amber-600 transition-colors">Testimonials</a>
-            <motion.button 
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={onGetStarted}
-              className="bg-stone-900 text-white px-6 py-2.5 rounded-full font-bold text-sm hover:bg-stone-800 transition-all shadow-lg"
-            >
-              Launch Dashboard
-            </motion.button>
+    <div className="landing">
+      <a className="landing__skip" href="#main">
+        Skip to content
+      </a>
+
+      <header className="landing__nav-shell">
+        <nav className="landing__nav" aria-label="Main navigation">
+          <a className="landing__brand" href="#top" aria-label="Kizuna home">
+            <img src="/logo.png" alt="" aria-hidden="true" />
+            <span>Kizuna</span>
+          </a>
+
+          <div className="landing__nav-links">
+            <a href="#care-assistant">For animal owners</a>
+            <a href="#veterinary-teams">For veterinary teams</a>
+            <a href="#care-loop">How it connects</a>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button 
-            type="button"
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-stone-600"
-            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={mobileMenuOpen ? "true" : "false"}
-          >
-            {mobileMenuOpen ? <X size={24} aria-hidden="true" /> : <Menu size={24} aria-hidden="true" />}
-          </button>
-        </div>
-
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="md:hidden absolute top-20 left-0 right-0 bg-white border-b border-stone-200 p-6 space-y-4 shadow-xl"
-          >
-            <a href="#features" className="block font-semibold text-stone-700 py-2">Features</a>
-            <a href="#how-it-works" className="block font-semibold text-stone-700 py-2">How It Works</a>
-            <a href="#testimonials" className="block font-semibold text-stone-700 py-2">Testimonials</a>
-            <button 
-              onClick={onGetStarted}
-              className="w-full bg-stone-900 text-white py-3 rounded-xl font-bold"
-            >
-              Launch Dashboard
+          <div className="landing__nav-actions">
+            <button className="button button--quiet" type="button" onClick={onGetStarted}>
+              Sign in
             </button>
-          </motion.div>
+            <button className="button button--ink" type="button" onClick={onGetStarted}>
+              View clinic workspace
+              <ArrowRight aria-hidden="true" />
+            </button>
+          </div>
+
+          <button
+            className="landing__menu-button"
+            type="button"
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
+            onClick={() => setMobileMenuOpen((open) => !open)}
+          >
+            {mobileMenuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+          </button>
+        </nav>
+
+        {mobileMenuOpen && (
+          <div className="landing__mobile-nav" id="mobile-navigation">
+            <a href="#care-assistant" onClick={closeMenu}>For animal owners</a>
+            <a href="#veterinary-teams" onClick={closeMenu}>For veterinary teams</a>
+            <a href="#care-loop" onClick={closeMenu}>How it connects</a>
+            <button className="button button--ink" type="button" onClick={onGetStarted}>
+              View clinic workspace
+              <ArrowRight aria-hidden="true" />
+            </button>
+          </div>
         )}
-      </motion.nav>
-
-      {/* Hero Section */}
-      <header className="relative pt-16 pb-24 lg:pt-20 lg:pb-32 overflow-hidden bg-gradient-to-b from-white to-stone-50">
-        {/* Background Elements - Theme glows */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 right-0 w-[700px] h-[700px] bg-gradient-to-br from-sage/10 to-marine/10 rounded-full blur-3xl -translate-y-1/3 translate-x-1/4" />
-          <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-gradient-to-tr from-sage/5 to-marine/5 rounded-full blur-3xl translate-y-1/3 -translate-x-1/4" />
-        </div>
-        
-        <div className="max-w-7xl mx-auto px-6 relative z-10 grid lg:grid-cols-2 gap-16 items-center">
-          <motion.div 
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-          >
-            <motion.div variants={prefersReducedMotion ? undefined : fadeInUp} className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-ink text-sage text-xs font-bold uppercase tracking-widest mb-6 border border-sage/20">
-              <Zap size={14} fill="currentColor" aria-hidden="true" />
-              v2.0 Now Live — AI-First Platform
-            </motion.div>
-            <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-[1.1] text-ink mb-6">
-              The AI Operating System for{' '}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-evergreen to-marine">
-                Modern Vets.
-              </span>
-            </motion.h1>
-            <motion.p variants={fadeInUp} className="text-lg text-stone-600 mb-8 max-w-lg leading-relaxed">
-              Automate patient retention, generate personalized care campaigns, and grow your clinic revenue with the world's most intelligent veterinary assistant.
-            </motion.p>
-            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row gap-4">
-              <motion.button 
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={onGetStarted}
-                className="flex items-center justify-center gap-2 bg-gradient-to-r from-evergreen to-marine text-white text-lg font-bold px-8 py-4 rounded-2xl shadow-xl shadow-marine/20 transition-all"
-              >
-                Start Free Trial <ArrowRight size={20} />
-              </motion.button>
-              <motion.button 
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex items-center justify-center gap-2 bg-white text-stone-700 border-2 border-stone-300 text-lg font-bold px-8 py-4 rounded-2xl hover:border-stone-400 hover:bg-stone-50 transition-all"
-              >
-                <Play size={18} fill="currentColor" /> Watch Demo
-              </motion.button>
-            </motion.div>
-            
-            {/* Quick Stats */}
-            <motion.div variants={fadeInUp} className="flex flex-wrap gap-8 mt-12 pt-8 border-t border-stone-200">
-              <div>
-                <p className="text-3xl font-black text-stone-900"><AnimatedCounter target={10000} suffix="+" /></p>
-                <p className="text-sm text-stone-500 font-medium">Reminders Sent</p>
-              </div>
-              <div>
-                <p className="text-3xl font-black text-stone-900"><AnimatedCounter target={98} suffix="%" /></p>
-                <p className="text-sm text-stone-500 font-medium">Delivery Rate</p>
-              </div>
-              <div>
-                <p className="text-3xl font-black text-stone-900"><AnimatedCounter target={250} suffix="+" /></p>
-                <p className="text-sm text-stone-500 font-medium">Happy Clinics</p>
-              </div>
-            </motion.div>
-          </motion.div>
-
-          {/* Hero Image */}
-          <motion.div
-            initial={{ opacity: 0, x: 60 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-            className="hidden lg:block relative"
-          >
-            <div className="relative">
-              <motion.img 
-                src="/assets/hero_dashboard.png" 
-                alt="Kizuna Dashboard Interface showing patient management and AI insights"
-                className="w-full rounded-2xl shadow-2xl shadow-ink/10 border-2 border-white"
-                animate={prefersReducedMotion ? undefined : { y: [0, -10, 0] }}
-                transition={prefersReducedMotion ? undefined : { duration: 5, repeat: Infinity, ease: "easeInOut" }}
-              />
-              
-              {/* Floating Badge 1 - Revenue */}
-              <motion.div 
-                animate={prefersReducedMotion ? undefined : { y: [0, 8, 0] }}
-                transition={prefersReducedMotion ? undefined : { duration: 3, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                className="absolute -left-6 top-1/3 bg-white p-4 rounded-xl shadow-lg shadow-ink/5 flex items-center gap-3 border border-ink/5"
-              >
-                <div className="bg-gradient-to-br from-evergreen to-marine p-2 rounded-lg text-white">
-                  <TrendingUp size={16} aria-hidden="true" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-ink/40 uppercase tracking-wide">Revenue</p>
-                  <p className="text-sm font-bold text-ink">+₦1.2M</p>
-                </div>
-              </motion.div>
-
-              {/* Floating Badge 2 - AI */}
-              <motion.div 
-                animate={prefersReducedMotion ? undefined : { y: [0, -8, 0] }}
-                transition={prefersReducedMotion ? undefined : { duration: 4, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}
-                className="absolute -right-4 bottom-20 bg-ink p-4 rounded-xl shadow-lg flex items-center gap-3"
-              >
-                <div className="bg-marine p-2 rounded-lg text-white">
-                  <Bot size={16} aria-hidden="true" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-wide">AI Agent</p>
-                  <p className="text-sm font-bold text-white">Active</p>
-                </div>
-              </motion.div>
-
-              {/* Rating Badge */}
-              <motion.div 
-                animate={prefersReducedMotion ? undefined : { y: [0, 6, 0] }}
-                transition={prefersReducedMotion ? undefined : { duration: 3.5, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                className="absolute right-8 top-6 bg-ink px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg"
-              >
-                <Star size={12} fill="#fbbf24" className="text-marine" aria-hidden="true" />
-                <span className="text-xs font-bold text-white">4.9</span>
-              </motion.div>
-            </div>
-          </motion.div>
-        </div>
       </header>
 
-      {/* Trusted By Logos - Black text on white */}
-      <section className="py-12 bg-white border-y border-stone-200">
-        <div className="max-w-7xl mx-auto px-6">
-          <p className="text-center text-xs font-bold text-stone-400 uppercase tracking-widest mb-8">Trusted by innovative veterinary clinics</p>
-          <div className="flex flex-wrap justify-center gap-x-12 gap-y-4 items-center">
-            {['VetCare+', 'PetPulse', 'Animalia', 'MediVet', 'PawSome', 'HealthyPaws'].map((brand, i) => (
-              <span key={i} className="text-xl font-black text-stone-300 hover:text-stone-900 transition-colors cursor-default">{brand}</span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works Section */}
-      <section id="how-it-works" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <p className="text-marine font-bold text-sm uppercase tracking-widest mb-3">Simple Setup</p>
-            <h2 className="text-3xl lg:text-4xl font-black text-ink mb-4">Up and running in 3 steps</h2>
-            <p className="text-ink/60 text-lg max-w-2xl mx-auto">No complex integrations. No IT team required. Just sign up and start sending.</p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-8 lg:gap-12">
-            {[
-              { step: 1, icon: Users, title: "Add Your Patients", desc: "Import your existing patient list or start fresh. Our OCR bot can even digitize paper records via Telegram." },
-              { step: 2, icon: Bot, title: "AI Crafts Messages", desc: "Kizuna AI analyzes patient history and generates warm, personalized WhatsApp reminders automatically." },
-              { step: 3, icon: Send, title: "Send & Track", desc: "One-click sending via WhatsApp. Track opens, replies and conversions in real-time." }
-            ].map((item, i) => (
-              <motion.div
-                key={item.step}
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.15 }}
-                className="relative text-center group"
-              >
-                <div className="relative inline-block mb-6">
-                  <div className="bg-ink w-16 h-16 rounded-2xl flex items-center justify-center mx-auto text-sage shadow-lg group-hover:scale-105 transition-transform">
-                    <item.icon size={28} aria-hidden="true" />
-                  </div>
-                  <div className="absolute -top-2 -right-2 bg-gradient-to-br from-evergreen to-marine w-7 h-7 rounded-full flex items-center justify-center text-xs font-black text-white shadow-sm">
-                    {item.step}
-                  </div>
-                </div>
-                <h3 className="text-xl font-bold text-stone-900 mb-2">{item.title}</h3>
-                <p className="text-stone-500 text-sm leading-relaxed max-w-xs mx-auto">{item.desc}</p>
-                
-                {/* Connector line */}
-                {i < 2 && (
-                  <div className="hidden md:block absolute top-8 left-[60%] w-[80%] h-px bg-gradient-to-r from-stone-300 to-transparent" />
-                )}
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Bento Grid Features */}
-      <section id="features" className="py-24 bg-stone-100">
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
-          >
-            <p className="text-marine font-bold text-sm uppercase tracking-widest mb-3">Powerful Features</p>
-            <h2 className="text-3xl lg:text-4xl font-black text-ink mb-4">Everything you need. Nothing you don't.</h2>
-            <p className="text-ink/60 text-lg max-w-xl mx-auto">Built by vets, powered by AI. Kizuna handles the busywork so you can focus on the medicine.</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Card 1: AI Reminders */}
-            <motion.div 
-              variants={scaleIn}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="lg:col-span-2 bg-white p-8 rounded-2xl shadow-sm border border-ink/5 hover:shadow-lg hover:border-marine/20 transition-all group"
-            >
-              <div className="flex items-start gap-4">
-                <div className="bg-ink w-12 h-12 rounded-xl flex items-center justify-center text-sage flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg">
-                  <Bot size={22} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-2 text-ink">AI-Powered Reminders</h3>
-                  <p className="text-ink/60 text-sm leading-relaxed">
-                    Forget generic templates. Our AI-powered engine crafts personalized, empathetic WhatsApp messages for vaccinations and checkups that owners actually read.
-                  </p>
-                </div>
-              </div>
-              
-              {/* Mock Chat UI */}
-              <div className="mt-6 flex flex-col gap-3">
-                <div className="bg-stone-100 p-4 rounded-2xl rounded-bl-sm text-sm text-stone-700 max-w-[280px] border border-stone-200">
-                  Hi Sarah! 👋 Bella is due for her Rabies booster. Book here: link.vet/kizuna
-                </div>
-                <div className="bg-stone-900 p-4 rounded-2xl rounded-br-sm text-sm text-white self-end max-w-[220px]">
-                  Perfect! Tuesday at 2pm works 🐕
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Card 2: Financials */}
-            <motion.div 
-              variants={scaleIn}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="bg-white p-8 rounded-2xl shadow-sm border border-ink/5 hover:shadow-lg hover:border-marine/20 transition-all group"
-            >
-              <div className="flex items-start gap-4 mb-6">
-                <div className="bg-gradient-to-br from-evergreen to-marine w-12 h-12 rounded-xl flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg shadow-marine/10">
-                  <TrendingUp size={22} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-1 text-ink">Revenue Tracking</h3>
-                  <p className="text-ink/40 text-sm">Real-time conversions</p>
-                </div>
-              </div>
-              <div className="flex items-end gap-1 h-20">
-                {[40, 65, 45, 80, 60, 95, 75].map((h, i) => (
-                  <motion.div 
-                    key={i}
-                    initial={{ height: 0 }}
-                    whileInView={{ height: `${h}%` }}
-                    transition={{ duration: 0.5, delay: i * 0.1 }}
-                    className="flex-1 bg-gradient-to-t from-evergreen to-marine rounded-t-md"
-                  />
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Card 3: Campaigns */}
-            <motion.div 
-              variants={scaleIn}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="bg-white p-8 rounded-2xl shadow-sm border border-stone-200 hover:shadow-lg hover:border-amber-200 transition-all group"
-            >
-              <div className="flex items-start gap-4">
-                <div className="bg-stone-900 w-12 h-12 rounded-xl flex items-center justify-center text-amber-400 flex-shrink-0 group-hover:scale-110 transition-transform shadow-lg">
-                  <MessageSquare size={22} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-2 text-stone-900">Marketing Blasters</h3>
-                  <p className="text-stone-500 text-sm leading-relaxed">
-                    One-click WhatsApp campaigns for Pet Birthdays, Free Deworming Days, and holiday promotions.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Card 4: Patient Records - Dark Card */}
-            <motion.div 
-              variants={scaleIn}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              className="lg:col-span-2 bg-stone-900 p-8 rounded-2xl shadow-xl text-white group"
-            >
-              <div className="flex items-start gap-4">
-                <div className="bg-marine w-12 h-12 rounded-xl flex items-center justify-center text-white flex-shrink-0">
-                  <Stethoscope size={22} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold mb-2">Complete Patient History</h3>
-                  <p className="text-white/60 text-sm leading-relaxed max-w-md">
-                    Access breeds, weights, past visits, and owner details instantly. A beautiful, searchable database for your furry patients.
-                  </p>
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-2 mt-6">
-                {["Species", "Vaccination", "Last Visit", "Owner Contact", "Weight"].map(tag => (
-                  <span key={tag} className="px-3 py-1.5 bg-white/10 rounded-lg text-xs font-semibold text-stone-300 backdrop-blur-sm">{tag}</span>
-                ))}
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials */}
-      <section id="testimonials" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <p className="text-amber-600 font-bold text-sm uppercase tracking-widest mb-3">Testimonials</p>
-            <h2 className="text-3xl lg:text-4xl font-black text-stone-900">Loved by clinics everywhere</h2>
-          </motion.div>
-
-          <div className="grid md:grid-cols-3 gap-6">
-            {[
-              { name: "Dr. Awilagbara Ayorinde", clinic: "Catalyst Vet Clinic", quote: "Kizuna increased our appointment bookings by 40% in the first month. The AI messages feel so personal!", avatar: "🧑🏾‍⚕️" },
-              { name: "Dr. Olatunbosun Agunbiade", clinic: "Ambit Veterinary", quote: "I was skeptical about AI, but Kizuna really understands pet owners. Our no-show rate dropped significantly.", avatar: "👨🏿‍⚕️" },
-              { name: "Dr. Adeyi Muslimah", clinic: "Muslimah FurEver Friends", quote: "The campaign feature is a game-changer. We sent a deworming promo and booked 30 appointments!", avatar: "👩🏾‍⚕️" }
-            ].map((testimonial, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                className="bg-stone-50 p-6 rounded-2xl border border-stone-200 hover:border-amber-300 transition-all relative"
-              >
-                <Quote size={24} className="text-amber-200 absolute top-4 right-4" aria-hidden="true" />
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="text-3xl">{testimonial.avatar}</div>
-                  <div>
-                    <p className="font-bold text-stone-900 text-sm">{testimonial.name}</p>
-                    <p className="text-xs text-stone-500">{testimonial.clinic}</p>
-                  </div>
-                </div>
-                <p className="text-stone-600 text-sm leading-relaxed">"{testimonial.quote}"</p>
-                <div className="flex gap-0.5 mt-4">
-                  {[...Array(5)].map((_, j) => <Star key={j} size={14} fill="#f59e0b" className="text-amber-500" aria-hidden="true" />)}
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA Section */}
-      <section className="py-24 bg-ink relative overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-marine/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-sage/10 rounded-full blur-3xl" />
-        </div>
-        
-        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+      <main id="main">
+        <section className="hero" id="top">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            className="hero__copy"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.52, ease: [0.22, 1, 0.36, 1] }}
           >
-            <h2 className="text-3xl lg:text-5xl font-black text-white mb-6">Ready to grow your practice?</h2>
-            <p className="text-xl text-white/50 mb-10 max-w-2xl mx-auto">Join hundreds of clinics already using Kizuna to automate reminders, boost retention, and increase revenue.</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={onGetStarted}
-                className="bg-gradient-to-r from-evergreen to-marine text-white text-lg font-bold px-10 py-4 rounded-2xl hover:shadow-xl hover:shadow-marine/20 transition-all"
-              >
-                Start Free Trial
-              </motion.button>
-              <motion.button 
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="bg-white/10 backdrop-blur-sm text-white border-2 border-white/20 text-lg font-bold px-10 py-4 rounded-2xl hover:bg-white/20 transition-all"
-              >
-                Schedule Demo
-              </motion.button>
-            </div>
-            <p className="text-white/40 text-sm mt-8 flex items-center justify-center gap-2">
-              <CheckCircle size={16} className="text-marine" /> No credit card required • 14-day free trial
+            <p className="hero__signal">
+              <Sparkles aria-hidden="true" />
+              AI-assisted care for pets, farms, and veterinary teams
             </p>
+            <h1>Tell the story once. Carry it through care.</h1>
+            <p className="hero__lede">
+              Kizuna helps pet and farm owners explain what is happening, builds a referral-ready animal profile, and
+              gives veterinary teams the tools to document the visit and manage what happens next.
+            </p>
+            <div className="hero__actions">
+              <a
+                className="button button--accent button--large"
+                href="https://t.me/openKizuna_bot"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Try Kizuna Care
+                <MessageCircle aria-hidden="true" />
+              </a>
+              <button className="button button--outline button--large" type="button" onClick={onGetStarted}>
+                See the clinic workspace
+                <ArrowRight aria-hidden="true" />
+              </button>
+            </div>
+            <div className="hero__assurances" aria-label="Kizuna product principles">
+              <span><CircleCheck aria-hidden="true" /> Pet and farm animal intake</span>
+              <span><CircleCheck aria-hidden="true" /> Clinician-reviewed records</span>
+              <span><CircleCheck aria-hidden="true" /> Available on Telegram now</span>
+            </div>
           </motion.div>
-        </div>
-      </section>
 
-      {/* Footer */}
-      <footer className="bg-[#001217] py-16 text-white">
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <img src="/logo.png" alt="Kizuna" className="w-8 h-8 object-contain" />
-                <span className="text-xl font-black">Kizuna</span>
+          <motion.div
+            className="hero__visual"
+            initial={{ opacity: 0, scale: 0.985 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.65, delay: 0.06, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <figure className="hero__photo">
+              <img
+                src="/images/kizuna-vet-dog.jpg"
+                alt="A veterinarian examining a dog beside its owner"
+              />
+            </figure>
+            <div className="hero__conversation" aria-label="Example Kizuna care assistant conversation">
+              <div className="conversation__head">
+                <span className="conversation__mark"><MessageCircle aria-hidden="true" /></span>
+                <div>
+                  <strong>Kizuna Care</strong>
+                  <span>Animal care assistant</span>
+                </div>
+                <span className="conversation__online">Available</span>
               </div>
-              <p className="text-white/40 text-sm">The AI-powered operating system for modern veterinary clinics.</p>
+              <div className="conversation__messages">
+                <p className="message message--owner">
+                  My dog has refused food since yesterday and seems unusually quiet.
+                </p>
+                <p className="message message--kizuna">
+                  I can help prepare this for veterinary care. Has your dog vomited, had diarrhoea, or struggled to stand?
+                </p>
+              </div>
+              <div className="conversation__status">
+                <ShieldCheck aria-hidden="true" />
+                Urgent concerns are routed for human review.
+              </div>
             </div>
-            <div>
-              <h4 className="font-bold mb-4 text-sm text-stone-300">Product</h4>
-              <ul className="space-y-2 text-sm text-stone-500">
-                <li><a href="#" className="hover:text-amber-400 transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-amber-400 transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-amber-400 transition-colors">Integrations</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4 text-sm text-stone-300">Company</h4>
-              <ul className="space-y-2 text-sm text-stone-500">
-                <li><a href="#" className="hover:text-amber-400 transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-amber-400 transition-colors">Blog</a></li>
-                <li><a href="#" className="hover:text-amber-400 transition-colors">Careers</a></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-bold mb-4 text-sm text-stone-300">Legal</h4>
-              <ul className="space-y-2 text-sm text-stone-500">
-                <li><a href="#" className="hover:text-amber-400 transition-colors">Privacy</a></li>
-                <li><a href="#" className="hover:text-amber-400 transition-colors">Terms</a></li>
-                <li><a href="#" className="hover:text-amber-400 transition-colors">Security</a></li>
-              </ul>
+          </motion.div>
+        </section>
+
+        <section className="audience-rail" aria-label="Kizuna products">
+          <a href="#care-assistant">
+            <span>For pet owners, farmers, and animal caregivers</span>
+            <strong>Kizuna Care assistant</strong>
+            <ChevronRight aria-hidden="true" />
+          </a>
+          <a href="#veterinary-teams">
+            <span>For hospitals, clinics, and field teams</span>
+            <strong>Kizuna clinical workspace</strong>
+            <ChevronRight aria-hidden="true" />
+          </a>
+        </section>
+
+        <motion.section className="owner-product section" id="care-assistant" {...reveal}>
+          <div className="owner-product__story">
+            <p className="section__label">Kizuna for animal owners</p>
+            <h2>A better first step when something feels wrong.</h2>
+            <p>
+              Kizuna turns an uncertain message into an organized intake. It asks the questions that are easy to forget,
+              keeps the animal's profile together, and prepares the owner to reach professional care with useful context.
+            </p>
+            <div className="owner-product__notice">
+              <Stethoscope aria-hidden="true" />
+              <p>
+                <strong>Support, not a replacement for a veterinarian.</strong>
+                Kizuna does not diagnose or prescribe. It helps people describe the problem clearly, recognize when
+                prompt care may be needed, and prepare for a veterinary professional.
+              </p>
             </div>
           </div>
-          <div className="border-t border-stone-800 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-sm text-stone-600">© 2026 Kizuna Inc. All rights reserved.</p>
-            <p className="text-sm text-stone-600">Made with ❤️ for veterinarians worldwide</p>
+
+          <div className="owner-product__capabilities">
+            {ownerCapabilities.map((capability) => {
+              const Icon = capability.icon;
+              return (
+                <article key={capability.title}>
+                  <Icon aria-hidden="true" />
+                  <div>
+                    <h3>{capability.title}</h3>
+                    <p>{capability.copy}</p>
+                  </div>
+                </article>
+              );
+            })}
+            <a
+              className="owner-product__cta"
+              href="https://t.me/openKizuna_bot"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <span>
+                <MessageCircle aria-hidden="true" />
+                Start a care conversation on Telegram
+              </span>
+              <ArrowRight aria-hidden="true" />
+            </a>
           </div>
+        </motion.section>
+
+        <motion.section className="clinic-product" id="veterinary-teams" {...reveal}>
+          <div className="clinic-product__inner">
+            <div className="clinic-product__heading">
+              <div>
+                <p className="section__label">Kizuna for veterinary teams</p>
+                <h2>Less administrative work. More complete patient stories.</h2>
+              </div>
+              <p>
+                Give the team one private workspace for owner intake, consultation documentation, patient history,
+                follow-up, recalls, and the next appointment.
+              </p>
+            </div>
+
+            <div className="clinic-product__body">
+              <div className="clinic-product__features">
+                {clinicCapabilities.map((capability) => {
+                  const Icon = capability.icon;
+                  return (
+                    <article key={capability.title}>
+                      <span><Icon aria-hidden="true" /></span>
+                      <h3>{capability.title}</h3>
+                      <p>{capability.copy}</p>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <div className="clinic-preview">
+                <div className="clinic-preview__top">
+                  <div>
+                    <span>Consultation in progress</span>
+                    <strong>Bingo · Canine · 4 years</strong>
+                  </div>
+                  <span className="clinic-preview__live"><i /> Recording</span>
+                </div>
+                <div className="clinic-preview__content">
+                  <div className="clinic-preview__transcript">
+                    <Mic aria-hidden="true" />
+                    <p>“Owner reports reduced appetite since yesterday. No vomiting reported...”</p>
+                    <span>Captured from consultation</span>
+                  </div>
+                  <div className="clinic-preview__note">
+                    <div>
+                      <span><FileText aria-hidden="true" /> SOAP draft</span>
+                      <em>Needs review</em>
+                    </div>
+                    <dl>
+                      <div><dt>Subjective</dt><dd>Reduced appetite for one day.</dd></div>
+                      <div><dt>Objective</dt><dd>Hydration normal. Weight pending.</dd></div>
+                      <div><dt>Plan</dt><dd>Complete examination and send owner instructions.</dd></div>
+                    </dl>
+                  </div>
+                </div>
+                <div className="clinic-preview__footer">
+                  <span><ShieldCheck aria-hidden="true" /> Clinician approval required</span>
+                  <button type="button" onClick={onGetStarted}>
+                    Open workspace <ChevronRight aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        <motion.section className="care-loop section" id="care-loop" {...reveal}>
+          <div className="care-loop__heading">
+            <div>
+              <p className="section__label">The connected care loop</p>
+              <h2>From first message to follow-up, without starting over.</h2>
+            </div>
+            <p>
+              Kizuna Care prepares the case before the visit. The clinic workspace helps the veterinary team receive,
+              document, and continue that care.
+            </p>
+          </div>
+          <div className="care-loop__steps">
+            {careLoop.map((step) => (
+              <article key={step.number}>
+                <span>{step.number}</span>
+                <h3>{step.title}</h3>
+                <p>{step.copy}</p>
+              </article>
+            ))}
+          </div>
+        </motion.section>
+
+        <section className="principles section">
+          <div className="principles__lead">
+            <p className="section__label">Designed for trust</p>
+            <h2>AI prepares the work. Veterinary professionals make the decisions.</h2>
+          </div>
+          <div className="principles__list">
+            <span><ShieldCheck aria-hidden="true" /> Veterinary decisions stay with veterinary professionals</span>
+            <span><UsersRound aria-hidden="true" /> Each clinic operates in its own private workspace</span>
+            <span><Languages aria-hidden="true" /> Owners receive clearer questions and easier-to-understand follow-up</span>
+            <span><Check aria-hidden="true" /> Clinical drafts require review before finalization</span>
+          </div>
+        </section>
+
+        <section className="final-cta">
+          <div>
+            <p className="section__label">Start from either side of care</p>
+            <h2>Start the conversation. Keep the whole care journey connected.</h2>
+          </div>
+          <div className="final-cta__actions">
+            <a
+              className="button button--light button--large"
+              href="https://t.me/openKizuna_bot"
+              target="_blank"
+              rel="noreferrer"
+            >
+              Chat with Kizuna Care
+              <MessageCircle aria-hidden="true" />
+            </a>
+            <button className="button button--accent button--large" type="button" onClick={onGetStarted}>
+              Explore the clinic workspace
+              <ArrowRight aria-hidden="true" />
+            </button>
+          </div>
+        </section>
+      </main>
+
+      <footer className="landing__footer">
+        <div>
+          <a className="landing__brand landing__brand--footer" href="#top">
+            <img src="/logo.png" alt="" aria-hidden="true" />
+            <span>Kizuna</span>
+          </a>
+          <p>One connected patient story, from the owner's first message to the veterinary team's follow-up.</p>
         </div>
+        <div className="landing__footer-links">
+          <a href="#care-assistant">Animal owners</a>
+          <a href="#veterinary-teams">Veterinary teams</a>
+          <a href="#care-loop">How it connects</a>
+        </div>
+        <p className="landing__copyright">© 2026 Kizuna. Built from Africa for animal care everywhere.</p>
       </footer>
     </div>
   );

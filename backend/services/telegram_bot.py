@@ -1,195 +1,280 @@
-import os
+"""Low-latency Telegram adapter for the shared Kizuna Care assistant."""
+
 import asyncio
+import os
 import threading
-import uuid
-import json
-from datetime import datetime
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from collections import OrderedDict, deque
+from typing import Any, Deque, Dict, List, Optional, Set
+
 from dotenv import load_dotenv
+from telegram import Update
+from telegram.constants import ChatAction
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+
+from services.care_assistant import assess_owner_message, fallback_owner_assessment
+from services.supabase_db import (
+    record_care_channel_inbound,
+    record_care_channel_outbound,
+    upsert_care_case,
+)
 
 load_dotenv()
 
-from services.sqlite_db import get_db_connection
-from services.gemini import extract_data_from_image, process_voice_note, process_batch_text
-
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_INTAKE_CLINIC_ID = (
+    os.getenv("TELEGRAM_INTAKE_CLINIC_ID")
+    or os.getenv("TELEGRAM_DEFAULT_CLINIC_ID")
+)
+TELEGRAM_RESPONSE_TIMEOUT_SECONDS = float(
+    os.getenv("TELEGRAM_RESPONSE_TIMEOUT_SECONDS", "10")
+)
+TELEGRAM_MAX_ACTIVE_CHATS = int(os.getenv("TELEGRAM_MAX_ACTIVE_CHATS", "500"))
 
-async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /start command"""
-    welcome_text = """
-🌟 *Welcome to Kizuna AI* 🌟
-_Your Premium Veterinary Companion_
+SessionMessage = Dict[str, Any]
+_session_history: "OrderedDict[str, Deque[SessionMessage]]" = OrderedDict()
+_background_tasks: Set[asyncio.Task[Any]] = set()
 
-I'm ready to help you digitize your clinic! You can use me for:
 
-📸 *Photo Entry*: Snap a picture of medical records.
-🎙️ *Voice Notes*: Say "Add a dog named Max, owner is Sarah..."
-✍️ *Text Entry*: Paste or type multiple pet records (e.g., "1. Max, Golden, Sarah, 0801... 2. Bella, Cat, John...")
+WELCOME_TEXT = """
+Welcome to Kizuna Care.
 
-I will process your records and they will appear on your dashboard instantly! 🚀
-    """
-    await update.message.reply_text(welcome_text, parse_mode="Markdown")
+Tell me what is happening with your pet or farm animal in your own words. Helpful details include:
 
-async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle /help command"""
-    help_text = """
-📖 *How to use Kizuna AI*
-    
-*Batch Entry*: Just type details for multiple pets in one message. For example:
-"Add Bingo, Dog, breed German Shp, owner Samuel Okafor, 08012345678, due Dec 15. Also add Fluffy, Cat, owner Amaka, 08098765432."
-    
-*Voice*: Send a voice note describing the patients.
-    
-*Photo*: Send a photo of a vaccination card.
-    """
-    await update.message.reply_text(help_text, parse_mode="Markdown")
+- Species, breed or production group
+- Age and sex
+- Main concern and when it started
+- Eating, drinking and activity
+- Medicines or recent treatment
+- How many animals are affected
 
-def save_pet_to_db(pet_data):
-    """Save a single pet record to SQLite"""
+Kizuna helps organize your information for veterinary care. It does not replace a veterinarian or provide a final diagnosis.
+""".strip()
+
+
+def _remember(chat_id: str, direction: str, content: str) -> List[SessionMessage]:
+    history = _session_history.pop(chat_id, deque(maxlen=12))
+    history.append({"direction": direction, "content": content})
+    _session_history[chat_id] = history
+    while len(_session_history) > TELEGRAM_MAX_ACTIVE_CHATS:
+        _session_history.popitem(last=False)
+    return list(history)
+
+
+def _run_in_background(coroutine: Any) -> None:
+    task = asyncio.create_task(coroutine)
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
+
+
+async def process_telegram_intake(
+    *,
+    clinic_id: str,
+    user_id: str,
+    chat_id: str,
+    message_id: str,
+    text: str,
+    display_name: Optional[str] = None,
+    username: Optional[str] = None,
+    raw_payload: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Generate a reply without putting persistence on the critical path."""
+    del clinic_id, user_id, message_id, display_name, username, raw_payload
+    history = _remember(chat_id, "inbound", text)
     try:
-        new_id = str(uuid.uuid4())
-        conn = get_db_connection()
-        conn.execute(
-            """INSERT INTO pets (id, name, species, breed, age, owner_name, owner_phone, status, next_vaccination_date) 
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (
-                new_id, 
-                pet_data.get('name', 'Unknown'), 
-                pet_data.get('species', 'Dog'), 
-                pet_data.get('breed', 'Unknown'), 
-                pet_data.get('age', 'Unknown'), 
-                pet_data.get('ownerName', 'Unknown'), 
-                pet_data.get('ownerPhone', 'Unknown'), 
-                pet_data.get('status', 'Healthy'), 
-                pet_data.get('nextVaccinationDate')
-            )
+        assessment = await asyncio.wait_for(
+            assess_owner_message(
+                message=text,
+                recent_messages=history,
+            ),
+            timeout=TELEGRAM_RESPONSE_TIMEOUT_SECONDS,
         )
-        conn.commit()
-        conn.close()
-        return True
-    except Exception as e:
-        print(f"DB Error: {e}")
-        return False
+    except (asyncio.TimeoutError, TimeoutError):
+        assessment = fallback_owner_assessment(text)
+        assessment["provider"] = "kizuna-deadline-fallback"
 
-async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle text messages for batch entry"""
-    text = update.message.text
-    if len(text) < 10: return # Simple filter
-    
-    await update.message.reply_text("Processing your request... ✍️")
-    
-    pets = await process_batch_text(text)
-    
-    if pets and isinstance(pets, list):
-        count = 0
-        for pet in pets:
-            if save_pet_to_db(pet):
-                count += 1
-        
-        if count > 0:
-            await update.message.reply_text(f"✅ Successfully added {count} patients to your dashboard!")
-        else:
-            await update.message.reply_text("❌ Failed to save entries. Please check the format.")
-    else:
-        await update.message.reply_text("🤔 I couldn't extract patient data from that. Try being more specific with names and details.")
+    _remember(chat_id, "outbound", assessment["reply"])
+    return {
+        "assessment": assessment,
+        "stored": None,
+        "persistence_error": None,
+    }
 
-async def handle_photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle photo messages (OCR)"""
-    await update.message.reply_text("Analyzing the image... one moment please 🔍")
-    
+
+async def persist_telegram_exchange(
+    *,
+    clinic_id: str,
+    user_id: str,
+    chat_id: str,
+    inbound_message_id: str,
+    outbound_message_id: str,
+    text: str,
+    reply: str,
+    assessment: Dict[str, Any],
+    display_name: Optional[str] = None,
+    username: Optional[str] = None,
+    raw_payload: Optional[Dict[str, Any]] = None,
+) -> None:
+    """Mirror a completed exchange into the Care Inbox without delaying Telegram."""
+
+    def persist() -> None:
+        stored = record_care_channel_inbound(
+            clinic_id=clinic_id,
+            channel="telegram",
+            external_user_id=user_id,
+            external_conversation_id=chat_id,
+            external_message_id=inbound_message_id,
+            content=text,
+            display_name=display_name,
+            username=username,
+            raw_payload=raw_payload,
+        )
+        conversation = stored.get("conversation") or {}
+        contact = stored.get("contact") or {}
+        inbound_message = stored.get("message") or {}
+        conversation_id = conversation.get("id")
+        if not conversation_id:
+            return
+        upsert_care_case(
+            clinic_id=clinic_id,
+            conversation_id=conversation_id,
+            contact_id=contact.get("id"),
+            inbound_message_id=inbound_message.get("id"),
+            assessment=assessment,
+        )
+        record_care_channel_outbound(
+            clinic_id=clinic_id,
+            channel="telegram",
+            external_user_id=user_id,
+            external_message_id=outbound_message_id,
+            content=reply,
+            contact_id=contact.get("id"),
+            conversation_id=conversation_id,
+            raw_payload={"telegram_chat_id": chat_id},
+        )
+
     try:
-        photo = update.message.photo[-1]
-        file = await context.bot.get_file(photo.file_id)
-        photo_bytes = await file.download_as_bytearray()
-        
-        extracted_data = await extract_data_from_image(bytes(photo_bytes), "image/jpeg")
-        
-        if extracted_data:
-            # Map extraction to DB format
-            pet_record = {
-                "name": extracted_data.get("pet_name"),
-                "ownerName": extracted_data.get("owner_name"),
-                "ownerPhone": extracted_data.get("owner_phone", "Unknown"),
-                "species": extracted_data.get("species", "Dog"),
-                "breed": extracted_data.get("breed", "Unknown"),
-                "nextVaccinationDate": extracted_data.get("next_vaccination")
-            }
-            
-            if save_pet_to_db(pet_record):
-                response_text = "✅ Record saved to dashboard!\n\n"
-                response_text += f"Pet: {pet_record['name']}\n"
-                response_text += f"Owner: {pet_record['ownerName']}\n"
-                response_text += f"Next Due: {pet_record['nextVaccinationDate'] or '?'}"
-                await update.message.reply_text(response_text)
-            else:
-                await update.message.reply_text("Failed to save the extracted data.")
-        else:
-            await update.message.reply_text("I couldn't read much from that photo. Try taking a clearer one! 📸")
-    except Exception as e:
-        print(f"Photo error: {e}")
-        await update.message.reply_text("Sorry, something went wrong while processing the image.")
+        await asyncio.to_thread(persist)
+    except Exception as exc:
+        print(f"Telegram background persistence failed: {exc}")
 
-async def handle_voice(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Handle voice messages"""
-    await update.message.reply_text("Listening to your voice note... 👂")
-    
-    try:
-        voice = update.message.voice
-        file = await context.bot.get_file(voice.file_id)
-        voice_bytes = await file.download_as_bytearray()
-        
-        extracted_data = await process_voice_note(bytes(voice_bytes), "audio/ogg")
-        
-        if extracted_data:
-            # For voice notes, if it's a list, process each. Gemini might return a list or single.
-            # Here we assume process_voice_note might return data that needs mapping.
-            pet_record = {
-                "name": extracted_data.get("pet_name"),
-                "ownerName": extracted_data.get("owner_name"),
-                "ownerPhone": extracted_data.get("owner_phone"),
-                "status": "Healthy"
-            }
-            
-            if save_pet_to_db(pet_record):
-                await update.message.reply_text(
-                    f"✅ Added {pet_record['name']} (Owner: {pet_record['ownerName']}) to your dashboard!"
-                )
-            else:
-                 await update.message.reply_text("Extracted info but failed to save.")
-        else:
-            await update.message.reply_text("I couldn't understand that voice note. Can you try again? 🎙️")
-    except Exception as e:
-        print(f"Voice error: {e}")
-        await update.message.reply_text("Sorry, problem hearing that voice note.")
 
-def run_bot():
-    """Run the bot in a separate thread"""
-    if not TELEGRAM_BOT_TOKEN:
-        print("⚠️ TELEGRAM_BOT_TOKEN missing. Telegram bot disabled.")
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    del context
+    if update.message:
+        await update.message.reply_text(WELCOME_TEXT)
+
+
+async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    del context
+    if update.message:
+        await update.message.reply_text(
+            "Describe the animal and your concern in one message. "
+            "You can continue replying as Kizuna asks for missing information. "
+            "For collapse, trouble breathing, seizure, poisoning, heavy bleeding, "
+            "or inability to stand, contact a veterinary professional immediately."
+        )
+
+
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    if not update.message or not update.effective_user or not update.effective_chat:
         return
-    
-    async def main():
-        app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-        
-        # Add handlers
+    text = (update.message.text or "").strip()
+    if not text:
+        return
+    if not TELEGRAM_INTAKE_CLINIC_ID:
+        await update.message.reply_text(
+            "Kizuna Care is not connected to a receiving veterinary team yet. "
+            "Please try again after the service has been configured."
+        )
+        return
+
+    user = update.effective_user
+    chat_id = str(update.effective_chat.id)
+    await context.bot.send_chat_action(
+        chat_id=update.effective_chat.id,
+        action=ChatAction.TYPING,
+    )
+    result = await process_telegram_intake(
+        clinic_id=TELEGRAM_INTAKE_CLINIC_ID,
+        user_id=str(user.id),
+        chat_id=chat_id,
+        message_id=str(update.message.message_id),
+        text=text,
+        display_name=user.full_name,
+        username=user.username,
+        raw_payload={
+            "telegram_chat_type": update.effective_chat.type,
+            "telegram_language_code": user.language_code,
+        },
+    )
+    assessment = result["assessment"]
+    reply = assessment["reply"]
+    sent = await update.message.reply_text(reply)
+
+    _run_in_background(
+        persist_telegram_exchange(
+            clinic_id=TELEGRAM_INTAKE_CLINIC_ID,
+            user_id=str(user.id),
+            chat_id=chat_id,
+            inbound_message_id=str(update.message.message_id),
+            outbound_message_id=str(sent.message_id),
+            text=text,
+            reply=reply,
+            assessment=assessment,
+            display_name=user.full_name,
+            username=user.username,
+            raw_payload={
+                "telegram_chat_type": update.effective_chat.type,
+                "telegram_language_code": user.language_code,
+            },
+        )
+    )
+
+
+async def handle_unsupported(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    del context
+    if update.message:
+        await update.message.reply_text(
+            "Text messages are supported first. Please describe the animal and concern in writing."
+        )
+
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    del update
+    print(f"Telegram update error: {context.error}")
+
+
+def run_bot() -> None:
+    if not TELEGRAM_BOT_TOKEN:
+        print("TELEGRAM_BOT_TOKEN missing. Telegram bot disabled.")
+        return
+
+    async def main() -> None:
+        app = (
+            Application.builder()
+            .token(TELEGRAM_BOT_TOKEN)
+            .concurrent_updates(8)
+            .build()
+        )
         app.add_handler(CommandHandler("start", start_command))
         app.add_handler(CommandHandler("help", help_command))
-        app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-        app.add_handler(MessageHandler(filters.VOICE, handle_voice))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
-        
-        print("🤖 Telegram bot started...")
-        # Polling is blocking and won't return until stopped
+        app.add_handler(
+            MessageHandler(filters.PHOTO | filters.VOICE | filters.Document.ALL, handle_unsupported)
+        )
+        app.add_error_handler(error_handler)
+
+        print("Kizuna Telegram care assistant started.")
         await app.initialize()
         await app.start()
-        await app.updater.start_polling(allowed_updates=Update.ALL_TYPES)
-        
-        # Wait until stop signal
-        stop_event = asyncio.Event()
-        await stop_event.wait()
-    
-    # Use a new event loop for this thread
+        await app.updater.start_polling(
+            allowed_updates=Update.ALL_TYPES,
+            bootstrap_retries=-1,
+            poll_interval=0.25,
+            timeout=20,
+        )
+        await asyncio.Event().wait()
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
@@ -197,11 +282,15 @@ def run_bot():
     finally:
         loop.close()
 
-def start_telegram_bot():
-    """Start the Telegram bot in a background thread"""
+
+def start_telegram_bot() -> None:
     if TELEGRAM_BOT_TOKEN:
         bot_thread = threading.Thread(target=run_bot, daemon=True)
         bot_thread.start()
-        print("🤖 Telegram bot thread started")
+        print("Kizuna Telegram bot thread started.")
     else:
-        print("⚠️ TELEGRAM_BOT_TOKEN missing. Telegram bot disabled.")
+        print("TELEGRAM_BOT_TOKEN missing. Telegram bot disabled.")
+
+
+if __name__ == "__main__":
+    run_bot()

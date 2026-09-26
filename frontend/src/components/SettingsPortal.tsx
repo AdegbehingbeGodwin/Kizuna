@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Building2, MessageSquare, Bot, Globe, Key, Bell, ShieldCheck, Zap } from 'lucide-react';
-
-const BACKEND_URL = "http://127.0.0.1:5000/api";
+import { Save, Building2, Bot, Globe, Zap } from 'lucide-react';
+import { apiFetch } from '../services/api';
 
 export const SettingsPortal: React.FC = () => {
     const [settings, setSettings] = useState({
         clinic_name: '',
         booking_url: '',
-        kapso_api_key: '',
-        kapso_phone_id: '',
-        telegram_token: '',
         ai_tone: 'friendly'
     });
     const [isSaving, setIsSaving] = useState(false);
@@ -18,7 +14,7 @@ export const SettingsPortal: React.FC = () => {
     useEffect(() => {
         const fetchSettings = async () => {
             try {
-                const res = await fetch(`${BACKEND_URL}/settings`);
+                const res = await apiFetch('/settings');
                 if (res.ok) {
                     const data = await res.json();
                     setSettings(prev => ({ ...prev, ...data }));
@@ -35,7 +31,7 @@ export const SettingsPortal: React.FC = () => {
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            const res = await fetch(`${BACKEND_URL}/settings`, {
+            const res = await apiFetch('/settings', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(settings)

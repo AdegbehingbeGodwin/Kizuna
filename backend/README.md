@@ -44,15 +44,32 @@ backend/
 | `POST` | `/api/pets` | Create new patient |
 | `POST` | `/api/reminders/generate` | Generate AI message |
 | `POST` | `/api/reminders/send` | Send via WhatsApp |
+| `POST` | `/api/whatsapp/send-template` | Send an approved WhatsApp template |
+| `POST` | `/api/whatsapp/send-interactive` | Send buttons, lists, CTAs, or a Flow |
+| `POST` | `/api/webhooks/kapso` | Receive signed Kapso events |
+| `GET` | `/api/whatsapp/conversations` | List persisted WhatsApp conversations |
 
 ## 🔐 Environment Variables
 
 ```env
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 GEMINI_API_KEY=your_gemini_api_key
 KAPSO_API_KEY=your_kapso_api_key
 KAPSO_PHONE_NUMBER_ID=your_phone_id
-DATABASE_URL=sqlite:///kizuna.db  # or PostgreSQL URL
+KAPSO_VERSION=v24.0
+KAPSO_WEBHOOK_SECRET=your_webhook_secret
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
 ```
+
+## Supabase setup
+
+Run `docs/supabase_schema.sql` in your Supabase SQL editor before starting the backend.
+Then follow `docs/TENANT_SETUP.md` to configure Supabase Auth, frontend public keys, clinic onboarding, roles, and tenant verification.
+
+## Kapso setup
+
+Follow `docs/KAPSO_SETUP.md` to connect a number, create Meta templates, register signed webhooks, and test inbound and outbound messages.
 
 ## 🌐 Deployment
 

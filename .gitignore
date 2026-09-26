@@ -66,6 +66,7 @@ htmlcov/
 *.tmp
 *.temp
 .cache/
+.runtime/
 
 # Vercel
 .vercel

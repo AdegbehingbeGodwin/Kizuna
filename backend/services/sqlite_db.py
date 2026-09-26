@@ -76,9 +76,6 @@ def init_db():
     default_settings = [
         ('clinic_name', 'Kizuna Vet Center'),
         ('booking_url', 'https://book.vet/kizuna'),
-        ('kapso_api_key', ''),
-        ('kapso_phone_id', ''),
-        ('telegram_token', ''),
         ('ai_tone', 'friendly')
     ]
     for key, value in default_settings:

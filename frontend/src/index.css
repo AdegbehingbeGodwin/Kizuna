@@ -1,4 +1,5 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap");
+@import url("../tokens.css");
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap");
 
 :root {
   /* Bond Theme Balance */
@@ -6,13 +7,12 @@
   --primary-dark: #001F27; /* Ink Black */
   --primary-light: #719A73; /* Sage Green */
   --accent: #1F73C2; /* Bright Marine */
-  --background: #f8fafc; /* Cool Mist */
+  --background: var(--color-paper);
   --foreground: #001F27;
   --card: #ffffff;
   --muted: #64748b;
-  --border: #e2e8f0;
-  --shadow:
-    0 10px 15px -3px rgba(0, 31, 39, 0.1), 0 4px 6px -2px rgba(0, 31, 39, 0.05);
+  --border: var(--color-rule);
+  --shadow: var(--shadow-panel);
 }
 
 * {
@@ -22,11 +22,17 @@
 }
 
 body {
-  font-family: "Plus Jakarta Sans", "Inter", sans-serif;
+  font-family: var(--font-body);
   background-color: var(--background);
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body {
+  overflow-x: clip;
+  scroll-behavior: smooth;
 }
 
 /* Bond Premium Gradient */
@@ -111,6 +117,15 @@ body {
     animation: none;
   }
 
+  .scribe-wave {
+    animation: none;
+  }
+
+  .scribe-modal-backdrop,
+  .scribe-modal-panel {
+    animation: none;
+  }
+
   .card-hover:hover {
     transform: none;
   }
@@ -122,6 +137,51 @@ body {
   }
   to {
     transform: rotate(360deg);
+  }
+}
+
+.scribe-wave {
+  animation: scribeWave 700ms ease-in-out infinite alternate;
+  transform-origin: center;
+}
+
+.scribe-wave:nth-child(3n + 1) {
+  animation-delay: -220ms;
+}
+
+.scribe-wave:nth-child(3n + 2) {
+  animation-delay: -440ms;
+}
+
+.scribe-modal-backdrop {
+  animation: scribeBackdropIn 160ms ease-out;
+}
+
+.scribe-modal-panel {
+  animation: scribeModalIn 180ms ease-out;
+}
+
+@keyframes scribeBackdropIn {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes scribeModalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+@keyframes scribeWave {
+  from {
+    opacity: 0.55;
+    transform: scaleY(0.55);
+  }
+  to {
+    opacity: 1;
+    transform: scaleY(1);
   }
 }
 
@@ -150,9 +210,32 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Outfit", sans-serif;
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.018em;
+}
+
+/* Hallmark pre-emit critique: P5 H5 E4 S5 R5 V4 */
+.kizuna-app-shell {
+  background: var(--color-paper);
+}
+
+.kizuna-panel {
+  border-color: var(--color-rule);
+  background: white;
+  box-shadow: var(--shadow-panel);
+}
+
+.kizuna-soft-panel {
+  border: 1px solid color-mix(in oklch, var(--color-accent) 16%, var(--color-rule));
+  background: color-mix(in oklch, var(--color-accent-soft) 48%, white);
+  color: var(--color-accent-ink);
+}
+
+.kizuna-document-canvas {
+  background:
+    radial-gradient(circle at 76% 8%, color-mix(in oklch, var(--color-accent-soft) 24%, transparent), transparent 28rem),
+    var(--color-paper-deep);
 }
 
 /* Stats card with sage glow */

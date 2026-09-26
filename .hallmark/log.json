@@ -1,0 +1,29 @@
+[
+  {
+    "date": "2026-06-12",
+    "macrostructure": "Dual-entry care network",
+    "theme": "custom",
+    "theme_axes": "warm clinical paper / dark clinic workspace / teal care accent",
+    "vibe": "humane assured connected",
+    "enrichment": "veterinary photography, WhatsApp intake conversation, and clinical workspace preview",
+    "brief": "Two-sided Kizuna landing page for animal owners and veterinary teams"
+  },
+  {
+    "date": "2026-06-10",
+    "macrostructure": "Editorial Product Workbench",
+    "theme": "custom",
+    "theme_axes": "warm clinical paper / geometric display / teal accent",
+    "vibe": "assured humane locally grounded",
+    "enrichment": "original veterinary photography and layered product demo",
+    "brief": "Customer-facing Kizuna landing page with pet imagery, motion, and expanded features"
+  },
+  {
+    "date": "2026-06-09",
+    "macrostructure": "Product Workbench",
+    "theme": "custom",
+    "theme_axes": "warm clinical paper / geometric display / teal accent",
+    "vibe": "assured clinical locally grounded",
+    "enrichment": "CSS consultation workspace",
+    "brief": "Kizuna veterinary clinical AI landing page and product roadmap"
+  }
+]

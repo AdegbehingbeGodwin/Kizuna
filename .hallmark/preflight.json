@@ -1,0 +1,9 @@
+{
+  "date": "2026-06-09",
+  "framework": "React 19 with Vite 6",
+  "fonts": ["Outfit", "Plus Jakarta Sans"],
+  "palette": "Existing teal, marine, sage, and cool-paper brand direction",
+  "motion": "Framer Motion installed; landing page uses CSS interaction feedback only",
+  "spacing": "Hallmark 4px token scale",
+  "preserved": ["brand logo", "font pairing", "teal brand direction", "existing dashboard route"]
+}

@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
+import type { Session } from "@supabase/supabase-js";
 import {
   Users,
-  Send,
-  BarChart3,
   Plus,
   Settings,
   LogOut,
   Bell,
   CheckCircle2,
-  Wallet,
   Sparkles,
   Search,
   MessageSquare,
@@ -20,28 +18,67 @@ import {
   Bot,
   Megaphone,
   FileText,
+  Mic,
+  MessagesSquare,
 } from "lucide-react";
 import { Pet, Reminder } from "./types";
-import { INITIAL_PETS, INITIAL_REMINDERS, CURRENCY_SYMBOL } from "./constants";
-import { StatsCard } from "./components/StatsCard";
+import { INITIAL_PETS, INITIAL_REMINDERS } from "./constants";
 import { PetList } from "./components/PetList";
+import { DashboardOverview } from "./components/DashboardOverview";
 import { CampaignHub } from "./components/CampaignHub";
 import { LandingPage } from "./components/LandingPage";
 import { SettingsPortal } from "./components/SettingsPortal";
+import { AuthPortal } from "./components/AuthPortal";
+import { ScribeWorkspace } from "./components/ScribeWorkspace";
+import { CareInbox } from "./components/CareInbox";
 import { getAnalyticsSummary } from "./services/geminiService";
+import { apiFetch } from "./services/api";
+import { supabase } from "./services/supabase";
 
-const BACKEND_URL = import.meta.env.PROD 
-  ? "https://kizuna-wgbv.onrender.com/api" 
-  : "http://127.0.0.1:5000/api";
+interface TenantInfo {
+  userId: string;
+  email?: string;
+  clinicId: string;
+  clinicName: string;
+  role: string;
+}
 
 const App: React.FC = () => {
+  const searchParams = new URLSearchParams(window.location.search);
+  const isDemo = searchParams.get("demo") === "1";
+  const initialView = searchParams.get("view");
   const [showLanding, setShowLanding] = useState(true);
+  const [session, setSession] = useState<Session | null>(null);
+  const [authLoading, setAuthLoading] = useState(!isDemo);
+  const [tenantLoading, setTenantLoading] = useState(false);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [tenant, setTenant] = useState<TenantInfo | null>(
+    isDemo
+      ? {
+          userId: "demo-user",
+          email: "demo@kizuna.africa",
+          clinicId: "demo-clinic",
+          clinicName: "Kizuna Veterinary Centre",
+          role: "owner",
+        }
+      : null,
+  );
   const [activeTab, setActiveTab] = useState<
-    "dashboard" | "pets" | "reminders" | "campaigns" | "settings"
-  >("dashboard");
-  const [pets, setPets] = useState<Pet[]>([]);
+    "dashboard" | "scribe" | "care" | "pets" | "reminders" | "campaigns" | "settings"
+  >(
+    initialView === "scribe"
+      ? "scribe"
+      : initialView === "care"
+        ? "care"
+        : "dashboard",
+  );
+  const [pets, setPets] = useState<Pet[]>(isDemo ? INITIAL_PETS : []);
   const [reminders, setReminders] = useState<Reminder[]>(INITIAL_REMINDERS);
-  const [aiInsight, setAiInsight] = useState<string>("");
+  const [aiInsight, setAiInsight] = useState<string>(
+    isDemo
+      ? "Three patients are due for follow-up this week. Review Fluffy's overdue checkup first, then prepare vaccination reminders for Bingo and Luna."
+      : "",
+  );
   const [isGeneratingMessage, setIsGeneratingMessage] =
     useState<boolean>(false);
   const [isAddPetModalOpen, setIsAddPetModalOpen] = useState<boolean>(false);
@@ -65,7 +102,7 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<any>({});
 
   const clinicInfo = {
-    name: settings.clinic_name || "Kizuna Vet Center",
+    name: settings.clinic_name || tenant?.clinicName || "Kizuna Vet Center",
     bookingLink: settings.booking_url || "https://book.vet/kizuna",
     whatsappNumber: settings.whatsapp_number || "2348000000000",
   };
@@ -83,9 +120,53 @@ const App: React.FC = () => {
       reminders.filter((r) => r.status === "converted").length * 5000,
   };
 
-  const fetchPets = useCallback(async () => {
+  const loadTenant = useCallback(async () => {
+    setTenantLoading(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/pets`);
+      const response = await apiFetch("/auth/me");
+      if (response.status === 403) {
+        setTenant(null);
+        setNeedsOnboarding(true);
+        return;
+      }
+      if (!response.ok) throw new Error("Unable to load clinic workspace.");
+      setTenant(await response.json());
+      setNeedsOnboarding(false);
+    } catch (error) {
+      console.error("Tenant load failed:", error);
+      setTenant(null);
+    } finally {
+      setTenantLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isDemo) return;
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      if (data.session) setShowLanding(false);
+      setAuthLoading(false);
+    });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      setShowLanding(!nextSession);
+      setTenant(null);
+      setNeedsOnboarding(false);
+      setAuthLoading(false);
+    });
+    return () => subscription.unsubscribe();
+  }, [isDemo]);
+
+  useEffect(() => {
+    if (session && !isDemo) void loadTenant();
+  }, [session, loadTenant, isDemo]);
+
+  const fetchPets = useCallback(async () => {
+    if (!tenant || isDemo) return;
+    try {
+      const response = await apiFetch("/pets");
       if (response.ok) {
         const data = await response.json();
         setPets(data || []);
@@ -95,11 +176,12 @@ const App: React.FC = () => {
     } catch (err) {
       console.error("Backend connection failed:", err);
     }
-  }, []);
+  }, [tenant, isDemo]);
 
   const fetchSettings = useCallback(async () => {
+    if (!tenant || isDemo) return;
     try {
-      const response = await fetch(`${BACKEND_URL}/settings`);
+      const response = await apiFetch("/settings");
       if (response.ok) {
         const data = await response.json();
         setSettings(data);
@@ -107,9 +189,10 @@ const App: React.FC = () => {
     } catch (err) {
       console.error("Failed to fetch settings:", err);
     }
-  }, []);
+  }, [tenant, isDemo]);
 
   useEffect(() => {
+    if (!tenant || isDemo) return;
     fetchPets();
     fetchSettings();
     const fetchInsight = async () => {
@@ -121,12 +204,38 @@ const App: React.FC = () => {
       }
     };
     fetchInsight();
-  }, [stats.remindersSent, fetchPets, fetchSettings]);
+  }, [tenant, stats.remindersSent, fetchPets, fetchSettings, isDemo]);
+
+  const enterDemo = () => {
+    window.location.assign("/?demo=1");
+  };
+
+  const exitWorkspace = () => {
+    if (isDemo) {
+      window.location.assign("/");
+      return;
+    }
+    void supabase.auth.signOut();
+  };
 
   const handleSendReminder = async (pet: Pet) => {
+    if (isDemo) {
+      const demoReminder: Reminder = {
+        id: `demo-${Date.now()}`,
+        petId: pet.id,
+        petName: pet.name,
+        message: `Hello ${pet.ownerName}, ${pet.name} is due for a follow-up at Kizuna Veterinary Centre.`,
+        sentAt: new Date().toISOString(),
+        status: "sent",
+        type: "checkup",
+      };
+      setReminders((current) => [demoReminder, ...current]);
+      showNotification("Demo reminder created. Nothing was sent.");
+      return;
+    }
     setIsGeneratingMessage(true);
     try {
-      const response = await fetch(`${BACKEND_URL}/reminders/generate`, {
+      const response = await apiFetch("/reminders/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -140,7 +249,7 @@ const App: React.FC = () => {
       });
       const { message } = await response.json();
 
-      const sendResponse = await fetch(`${BACKEND_URL}/reminders/send`, {
+      const sendResponse = await apiFetch("/reminders/send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -175,8 +284,21 @@ const App: React.FC = () => {
   };
 
   const handleCreatePet = async () => {
+    if (isDemo) {
+      setPets((current) => [
+        ...current,
+        {
+          id: `demo-pet-${Date.now()}`,
+          ...newPet,
+          status: "Healthy",
+        },
+      ]);
+      setIsAddPetModalOpen(false);
+      showNotification(`${newPet.name} added to the demo workspace.`);
+      return;
+    }
     try {
-      const response = await fetch(`${BACKEND_URL}/pets`, {
+      const response = await apiFetch("/pets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newPet),
@@ -216,7 +338,7 @@ const App: React.FC = () => {
     }
 
     try {
-      const response = await fetch(`${BACKEND_URL}/pets/${petId}`, {
+      const response = await apiFetch(`/pets/${petId}`, {
         method: "DELETE",
       });
       if (response.ok) {
@@ -236,12 +358,52 @@ const App: React.FC = () => {
     setTimeout(() => setNotifications((prev) => prev.slice(1)), 4000);
   };
 
-  if (showLanding) {
+  if (authLoading && !isDemo) {
+    return <div className="min-h-dvh bg-stone-50" />;
+  }
+
+  if (!session && !isDemo) {
+    return showLanding ? (
+      <LandingPage onGetStarted={() => setShowLanding(false)} />
+    ) : (
+      <AuthPortal
+        mode="auth"
+        onBack={() => setShowLanding(true)}
+        onDemo={enterDemo}
+        onReady={() => setShowLanding(false)}
+      />
+    );
+  }
+
+  if (tenantLoading && !tenant) {
+    return (
+      <div className="min-h-dvh bg-stone-50 flex items-center justify-center font-bold text-ink/60">
+        Loading your clinic workspace...
+      </div>
+    );
+  }
+
+  if (needsOnboarding) {
+    return <AuthPortal mode="onboarding" onReady={loadTenant} />;
+  }
+
+  if (!tenant) {
+    return (
+      <div className="min-h-dvh bg-stone-50 flex items-center justify-center p-6 text-center">
+        <div>
+          <p className="font-bold text-ink">Your clinic workspace could not be loaded.</p>
+          <button className="mt-4 text-marine font-bold" onClick={loadTenant}>Try again</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (showLanding && !isDemo) {
     return <LandingPage onGetStarted={() => setShowLanding(false)} />;
   }
 
   return (
-    <div className="min-h-screen bg-mist font-sans selection:bg-marine/10 selection:text-ink flex">
+    <div className="kizuna-app-shell min-h-dvh font-sans selection:bg-marine/10 selection:text-ink flex">
       {/* Mobile Header */}
       <div className="lg:hidden absolute top-0 w-full glass-panel z-40 px-6 py-4 flex items-center justify-between border-b border-white/20">
         <div className="flex items-center gap-2">
@@ -250,25 +412,35 @@ const App: React.FC = () => {
             Kizuna<span className="text-marine">.</span>
           </span>
         </div>
-        <button
-          type="button"
-          aria-label="Notifications"
-          className="relative p-2 text-ink/40 hover:bg-ink/5 rounded-xl transition-colors"
-        >
-          <Bell size={20} aria-hidden="true" />
-          <span
-            className="absolute top-2 right-2 w-2 h-2 bg-marine rounded-full border-2 border-white"
-            aria-hidden="true"
-          ></span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="relative p-2 text-ink/40 hover:bg-ink/5 rounded-xl transition-colors"
+          >
+            <Bell size={20} aria-hidden="true" />
+            <span
+              className="absolute top-2 right-2 w-2 h-2 bg-marine rounded-full border-2 border-white"
+              aria-hidden="true"
+            ></span>
+          </button>
+          <button
+            type="button"
+            aria-label="Sign out"
+            onClick={exitWorkspace}
+            className="p-2 text-ink/40 hover:bg-ink/5 hover:text-ink rounded-xl transition-colors"
+          >
+            <LogOut size={20} aria-hidden="true" />
+          </button>
+        </div>
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden lg:flex w-72 bg-white border-r border-ink/5 h-screen sticky top-0 flex-col justify-between p-6">
+      <aside className="hidden lg:flex w-72 bg-white border-r border-stone-200 h-dvh sticky top-0 flex-col justify-between p-6">
         <div>
           <div
             className="flex items-center gap-3 px-2 mb-12 cursor-pointer"
-            onClick={() => setShowLanding(true)}
+            onClick={exitWorkspace}
           >
             <img src="/logo.png" alt="Kizuna Logo" className="w-10 h-10 object-contain" />
             <span className="text-2xl font-black tracking-tighter text-ink">
@@ -282,6 +454,18 @@ const App: React.FC = () => {
               label="Dashboard"
               active={activeTab === "dashboard"}
               onClick={() => setActiveTab("dashboard")}
+            />
+            <NavItem
+              icon={<Mic size={20} />}
+              label="Scribe"
+              active={activeTab === "scribe"}
+              onClick={() => setActiveTab("scribe")}
+            />
+            <NavItem
+              icon={<MessagesSquare size={20} />}
+              label="Care inbox"
+              active={activeTab === "care"}
+              onClick={() => setActiveTab("care")}
             />
             <NavItem
               icon={<Users size={20} />}
@@ -314,138 +498,53 @@ const App: React.FC = () => {
             </div>
           </nav>
         </div>
-
+        <button
+          type="button"
+          onClick={exitWorkspace}
+          className="flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-bold text-ink/50 hover:bg-ink/5 hover:text-ink"
+        >
+          <LogOut size={18} />
+          {isDemo ? "Exit demo" : "Sign out"}
+        </button>
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 p-4 lg:p-10 pb-24 lg:pb-10 pt-20 lg:pt-10 max-w-7xl mx-auto w-full h-screen overflow-y-auto">
-        {activeTab === "dashboard" && (
-          <div className="animate-fade-in space-y-8">
-            <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div>
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight mb-1">
-                  Good Morning, Dr. Sarah 👋
-                </h1>
-                <p className="text-slate-500 font-medium">
-                  Here's what's happening at {clinicInfo.name} today.
-                </p>
-              </div>
-            </header>
-
-            {aiInsight && (
-              <div className="bg-ink p-6 rounded-[2rem] text-white shadow-xl relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-marine/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700"></div>
-                <div className="relative z-10 flex gap-4">
-                  <div className="bg-marine p-3 rounded-2xl h-fit">
-                    <Sparkles className="text-white" size={24} />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-bold text-lg mb-1">AI Daily Insight</h3>
-                    <p className="text-white/60 text-sm leading-relaxed max-w-2xl">
-                      {aiInsight}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
-              <StatsCard
-                label="Total Patients"
-                value={stats.totalPets.toString()}
-                icon={<Users className="text-ink/30" size={20} />}
-              />
-              <StatsCard
-                label="Reminders Sent"
-                value={stats.remindersSent.toString()}
-                icon={<Send className="text-ink/30" size={20} />}
-              />
-              <StatsCard
-                label="Conversion"
-                value={`${stats.conversionRate.toFixed(1)}%`}
-                icon={<BarChart3 className="text-ink/30" size={20} />}
-                trend="+2.4%"
-              />
-              <StatsCard
-                label="Est. Revenue"
-                value={`${CURRENCY_SYMBOL}${stats.estimatedRevenue.toLocaleString()}`}
-                icon={<Wallet className="text-ink/30" size={20} />}
-                highlight
-              />
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Main Content - Patients */}
-              <div className="lg:col-span-2">
-                <PetList
-                  pets={pets.slice(0, 5)}
-                  onSendReminder={handleSendReminder}
-                  onDeletePet={handleDeletePet}
-                  onViewAll={() => setActiveTab("pets")}
-                />
-              </div>
-
-              {/* Sidebar - Activity + Quick Actions */}
-              <div className="space-y-6">
-                {/* Quick Actions */}
-                <div className="bg-gradient-to-br from-evergreen to-marine p-6 rounded-[2rem] text-white">
-                  <h3 className="text-lg font-bold mb-2">Quick Actions</h3>
-                  <p className="text-white/60 text-sm mb-4">Get things done faster</p>
-                  <div className="space-y-3">
-                    <button
-                      type="button"
-                      onClick={() => setIsAddPetModalOpen(true)}
-                      className="w-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
-                    >
-                      <Plus size={18} />
-                      Add New Patient
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("campaigns")}
-                      className="w-full bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white font-bold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2"
-                    >
-                      <Megaphone size={18} />
-                      Create Campaign
-                    </button>
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="bg-white p-6 rounded-[2rem] border border-slate-100 shadow-sm">
-                  <h3 className="text-lg font-bold text-slate-900 mb-4">Recent Activity</h3>
-                  <div className="space-y-4">
-                    {reminders.slice(0, 5).map((reminder) => (
-                      <div key={reminder.id} className="flex gap-3 items-start">
-                        <div
-                          className={`mt-1.5 w-2 h-2 rounded-full shrink-0 ${reminder.status === "sent" ? "bg-marine" : "bg-green-500"}`}
-                        />
-                        <div>
-                          <p className="text-sm font-semibold text-slate-700">
-                            {reminder.status === "sent"
-                              ? "Reminder Sent"
-                              : "Appointment Booked"}
-                          </p>
-                          <p className="text-xs text-slate-400 mt-0.5">
-                            {reminder.petName} •{" "}
-                            {new Date(reminder.sentAt).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                    {reminders.length === 0 && (
-                      <p className="text-slate-400 text-sm italic text-center py-4">
-                        No recent activity
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
+      <main
+        className={`flex-1 p-4 pb-24 pt-20 lg:p-10 lg:pb-10 lg:pt-10 h-dvh overflow-y-auto ${
+          activeTab === "scribe" ? "min-w-0" : "mx-auto w-full max-w-7xl"
+        }`}
+      >
+        {isDemo && (
+          <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-pretty font-semibold">
+              You are viewing a sample clinic workspace. Changes stay in this browser preview and no messages are sent.
+            </p>
+            <button type="button" onClick={exitWorkspace} className="w-fit font-bold underline underline-offset-4">
+              Exit demo
+            </button>
           </div>
+        )}
+
+        {activeTab === "dashboard" && (
+          <DashboardOverview
+            clinicName={clinicInfo.name}
+            pets={pets}
+            reminders={reminders}
+            aiInsight={aiInsight}
+            onStartConsultation={() => setActiveTab("scribe")}
+            onAddPatient={() => setIsAddPetModalOpen(true)}
+            onViewPatients={() => setActiveTab("pets")}
+            onViewReminders={() => setActiveTab("reminders")}
+            onSendReminder={handleSendReminder}
+          />
+        )}
+
+        {activeTab === "scribe" && (
+          <ScribeWorkspace pets={pets} isDemo={isDemo} onNotice={showNotification} />
+        )}
+
+        {activeTab === "care" && (
+          <CareInbox isDemo={isDemo} onNotice={showNotification} />
         )}
 
         {activeTab === "pets" && (
@@ -474,7 +573,7 @@ const App: React.FC = () => {
                     formData.append("file", file);
 
                     try {
-                      const res = await fetch(`${BACKEND_URL}/pets/import-excel`, {
+                      const res = await apiFetch("/pets/import-excel", {
                         method: "POST",
                         body: formData,
                       });
@@ -482,7 +581,7 @@ const App: React.FC = () => {
                       if (data.success) {
                         alert(`Successfully imported ${data.count} patients!`);
                         // Refresh pets list
-                        const resPets = await fetch(`${BACKEND_URL}/pets`);
+                        const resPets = await apiFetch("/pets");
                         const updatedPets = await resPets.json();
                         setPets(updatedPets);
                       } else {
@@ -565,27 +664,32 @@ const App: React.FC = () => {
       {/* Mobile Bottom Nav */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 p-4 pb-8 flex justify-between items-center z-40">
         <MobileNavItem
+          label="Dashboard"
           icon={<LayoutDashboard size={20} />}
           active={activeTab === "dashboard"}
           onClick={() => setActiveTab("dashboard")}
         />
         <MobileNavItem
+          label="Patients"
           icon={<Users size={20} />}
           active={activeTab === "pets"}
           onClick={() => setActiveTab("pets")}
         />
         <MobileNavItem
-          icon={<Plus size={24} />}
-          active={false}
-          onClick={() => setIsAddPetModalOpen(true)}
+          label="Scribe"
+          icon={<Mic size={24} />}
+          active={activeTab === "scribe"}
+          onClick={() => setActiveTab("scribe")}
           highlight
         />
         <MobileNavItem
-          icon={<MegaphoneIcon active={activeTab === "campaigns"} />}
-          active={activeTab === "campaigns"}
-          onClick={() => setActiveTab("campaigns")}
+          label="Care inbox"
+          icon={<MessagesSquare size={20} />}
+          active={activeTab === "care"}
+          onClick={() => setActiveTab("care")}
         />
         <MobileNavItem
+          label="Settings"
           icon={<Settings size={20} />}
           active={activeTab === "settings"}
           onClick={() => setActiveTab("settings")}
@@ -895,12 +999,15 @@ const NavItem: React.FC<{
 );
 
 const MobileNavItem: React.FC<{
+  label: string;
   icon: React.ReactNode;
   active: boolean;
   onClick: () => void;
   highlight?: boolean;
-}> = ({ icon, active, onClick, highlight }) => (
+}> = ({ label, icon, active, onClick, highlight }) => (
   <button
+    type="button"
+    aria-label={label}
     onClick={onClick}
     className={`flex flex-col items-center justify-center p-2 rounded-xl transition-all ${
       highlight
